@@ -174,7 +174,7 @@ describe('MCP middleware bypass — audit logging (a)', () => {
       meta,
       { name: 'gizmo' },
       VALID_TOKEN,
-      { __app: app },
+      app,
     )
     expect(result.isError).toBeUndefined()
 

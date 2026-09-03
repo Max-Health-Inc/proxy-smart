@@ -13,18 +13,16 @@
  */
 import type { McpServer } from '@modelcontextprotocol/server'
 import * as z from 'zod'
-import { executeResourceResult, DISPATCH_APP_KEY } from '@proxy-smart/elysia-mcp'
+import { executeResourceResult } from '@proxy-smart/elysia-mcp'
 import { prefabView, uiToolMeta } from '@proxy-smart/elysia-mcp/prefab'
 import {
   getResourceRegistry,
   isResourceRegistryInitialized,
-  getDispatchApp,
+  requireDispatchApp,
 } from './tool-registry'
 import type { ResourceMetadata } from './tool-registry'
 import { isResourceExposed } from '../mcp-endpoint-config'
 import { config } from '../../config'
-import { createAdminClient } from '../keycloak-plugin'
-import { getAccessControlInstance } from '../access-control/plugin'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -142,17 +140,9 @@ export function registerReadResourceTool(
 
       try {
         // Dispatch through the package executor. When a ROOT dispatch app is
-        // registered, this runs the full Elysia pipeline (guards,
-        // response-schema coercion, lifecycle hooks); otherwise it falls back
-        // to a synthetic context. The getAdmin / getAccessControl decorators
-        // remain available for the synthetic fallback path. Query params are
-        // merged into the args the executor uses to rebuild the request.
-        const app = getDispatchApp()
-        const contextDecorators: Record<string, unknown> = {
-          getAdmin: createAdminClient,
-          getAccessControl: getAccessControlInstance,
-        }
-        if (app) contextDecorators[DISPATCH_APP_KEY] = app
+        // Runs the full Elysia pipeline: guards, response-schema coercion and
+        // lifecycle hooks. Query params are merged into the args the executor
+        // uses to rebuild the request.
 
         const params: Record<string, string> = {
           ...match.pathParams,
@@ -166,7 +156,7 @@ export function registerReadResourceTool(
           match.meta,
           params,
           tokenRef.current,
-          contextDecorators,
+          requireDispatchApp(),
           { textFormat: 'auto', ...(view ? { view } : {}) },
         )
         return structuredContent !== undefined
