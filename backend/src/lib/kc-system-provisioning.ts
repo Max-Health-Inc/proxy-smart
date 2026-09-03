@@ -384,7 +384,7 @@ export async function reconcileClientHomeUrls(
     })
     if (!baseUrl) continue
 
-    await admin.clients.update({ id: client.id }, { baseUrl } as ClientRepresentation)
+    await admin.clients.update({ id: client.id }, { baseUrl })
     updated.push({ clientId: client.clientId, baseUrl })
     logger.admin.info('Backfilled client baseUrl', { clientId: client.clientId, baseUrl })
   }
