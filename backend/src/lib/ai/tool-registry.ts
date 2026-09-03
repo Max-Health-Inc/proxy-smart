@@ -16,7 +16,6 @@ import {
   pathToResourceUri as _pathToResourceUri,
   getMergedInputSchema as _getMergedInputSchema,
   executeTool as _executeTool,
-  DISPATCH_APP_KEY,
 } from '@proxy-smart/elysia-mcp'
 import type {
   ToolMetadata,
@@ -57,6 +56,20 @@ let dispatchApp: DispatchApp | null = null
  */
 export function setDispatchApp(app: DispatchApp): void {
   dispatchApp = app
+}
+
+/**
+ * The root app, or a thrown error if it was never registered.
+ *
+ * Execution has no unguarded fallback any more, so there is nothing sensible to
+ * do without it — and the previous shape (`app ? {...} : undefined`) is exactly
+ * how the unguarded path used to be selected by accident.
+ */
+export function requireDispatchApp(): DispatchApp {
+  if (!dispatchApp) {
+    throw new Error('Dispatch app not registered — setDispatchApp() must run before tool execution')
+  }
+  return dispatchApp
 }
 
 /** Get the registered dispatch app, or null if not yet set. */
@@ -246,7 +259,6 @@ export function createToolExecutor(
   context: ToolExecutorContext,
 ) {
   type CustomHandler = (args: unknown, context: unknown) => unknown | Promise<unknown>
-  const app = context.app ?? dispatchApp
 
   return {
     async execute(toolName: string, args: unknown): Promise<unknown> {
@@ -278,7 +290,10 @@ export function createToolExecutor(
         tool,
         (args as Record<string, unknown>) ?? {},
         context.token,
-        app ? { [DISPATCH_APP_KEY]: app } : undefined,
+        // The caller's app wins, per the ExecutorContext contract; the registry's
+        // registered one is the default. requireDispatchApp throws when neither
+        // exists, so there is no unguarded path to fall into.
+        context.app ?? requireDispatchApp(),
       )
 
       const text = result.content[0]?.text ?? ''

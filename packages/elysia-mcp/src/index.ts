@@ -46,7 +46,6 @@ export {
   executeResource,
   executeResourceResult,
   applyView,
-  DISPATCH_APP_KEY,
   type ExecuteOptions,
   type ResourceResult,
   type StructuredContent,
