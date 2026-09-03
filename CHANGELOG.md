@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.11-alpha.202609031222.a93e6fad1] - 2026-09-03
+
+- ✨ Features: None
+- 🐛 Bug Fixes:
+  - Hardened admin endpoint security by enforcing hasAdminRole on admin token gate for smart-config endpoints
+- 🔧 Chores & Improvements:
+  - Sync package versions
+  - Remove unnecessary type assertion in baseUrl backfill for cleaner type checks
+- 📚 Documentation: None
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/proxy-smart/proxy-smart/pull/1177
+
+
 ## [0.4.6-beta.202608300840.a2036590b] - 2026-08-30
 
 - ✨ Features: 
