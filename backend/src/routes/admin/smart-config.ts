@@ -9,7 +9,7 @@ import { extractBearerToken } from '@/lib/admin-utils'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { CommonErrorResponses, SmartConfigRefreshResponse, type SmartConfigurationResponseType } from '@/schemas'
 import { getAdminClient } from '@/lib/kc-admin-factory'
-import { reconcileResourceIndicators } from '@/lib/kc-system-provisioning'
+import { reconcileClientHomeUrls, reconcileResourceIndicators } from '@/lib/kc-system-provisioning'
 
 /**
  * SMART Configuration Admin endpoints
@@ -91,6 +91,51 @@ export const smartConfigAdminRoutes = new Elysia({ prefix: '/smart-config', tags
     detail: {
       summary: 'Reconcile RFC 8707 resource indicators',
       description: 'Create/repair the resource-server clients (fhir-resource-server, mcp-resource-server), the resource-indicators client scope and its audience mappers, so SMART token exchange can bind the FHIR/MCP resource aud. Fixes invalid_target on a realm that was imported with IGNORE_EXISTING. Idempotent.',
+      tags: ['admin', 'smart-apps'],
+      security: [{ BearerAuth: [] }],
+    },
+  })
+
+  .post('/reconcile-client-home-urls', async ({ set, headers }) => {
+    const auth = extractBearerToken(headers)
+    if (!auth) {
+      set.status = 401
+      return { error: 'Authentication required' }
+    }
+
+    try {
+      await validateToken(auth)
+
+      const admin = await getAdminClient()
+      if (!admin) {
+        set.status = 503
+        return { error: 'Keycloak admin client unavailable' }
+      }
+
+      const clients = await reconcileClientHomeUrls(admin)
+      return {
+        message: `Backfilled baseUrl on ${clients.length} client(s)`,
+        timestamp: new Date().toISOString(),
+        clients,
+      }
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    response: {
+      200: t.Object({
+        message: t.String(),
+        timestamp: t.String(),
+        clients: t.Array(t.Object({
+          clientId: t.String(),
+          baseUrl: t.String(),
+        })),
+      }),
+      ...CommonErrorResponses,
+    },
+    detail: {
+      summary: 'Backfill client home URLs',
+      description: "Set baseUrl from the redirect URIs on SMART clients that have none, so Keycloak's error and page-expired screens link back to the app rather than to this proxy's API host. Clients registered before this was wired in have no baseUrl; new ones get it at registration. Never overwrites a baseUrl that is already set. Idempotent.",
       tags: ['admin', 'smart-apps'],
       security: [{ BearerAuth: [] }],
     },
