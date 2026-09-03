@@ -378,7 +378,12 @@ export async function reconcileClientHomeUrls(
     if (client.attributes?.['smart_app'] !== 'true') continue
     if (client.baseUrl && client.baseUrl.trim() !== '') continue
 
+    // Same inputs, same precedence as registration: a declared client_uri wins
+    // over a redirect origin. Dynamic registration persists it as
+    // `smart.client_uri`, so leaving it out here would have resolved a worse
+    // answer than the client actually gave us.
     const baseUrl = resolveClientHomeUrl({
+      clientUri: client.attributes?.['smart.client_uri'],
       redirectUris: client.redirectUris,
       proxyBaseUrl: config.baseUrl,
     })
