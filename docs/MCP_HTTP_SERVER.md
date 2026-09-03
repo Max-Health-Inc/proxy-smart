@@ -140,7 +140,7 @@ Both CIMD and DCR are advertised via `client_registration_types_supported`. `tok
 
 Tools on `/mcp` are derived from the Elysia route table by [`@proxy-smart/elysia-mcp`](../packages/elysia-mcp/README.md), which reads path, method, body/query/params schemas, the handler reference, and the route's `meta.public` flag. Only routes under the configured prefixes are considered, so a route is never exposed merely by existing. Naming, resource URIs, and the annotations derived from each HTTP verb are documented in that package; [Backend API Tools](./BACKEND_API_TOOLS.md) summarises them.
 
-Execution goes back through the real Elysia pipeline via a registered dispatch app, so route guards, response-schema coercion, and lifecycle hooks such as admin audit logging all run. A synthetic-context fallback exists for the case where no dispatch app is registered, and the `getAdmin` / `getAccessControl` decorators serve that path.
+Execution goes back through the real Elysia pipeline via a registered dispatch app, so route guards, response-schema coercion, and lifecycle hooks such as admin audit logging all run. There is no fallback: the app is a required argument to the executor, so a route cannot be run outside the pipeline. The `getAdmin` / `getAccessControl` decorators that served the old synthetic path are gone with it — handlers get their decorators from the app.
 
 Three tools are hand-written rather than derived:
 

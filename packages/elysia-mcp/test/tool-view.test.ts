@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect } from 'bun:test'
+import { mountRoutes } from './helpers/mount'
 import { executeTool, type ToolView } from '../src/executor'
 import type { ToolMetadata } from '../src/types'
 
@@ -37,12 +38,12 @@ const wireView: ToolView = (payload, context) => ({
 
 describe('executeTool with a view', () => {
   it('replaces structuredContent with the view', async () => {
-    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, undefined, { view: wireView })
+    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, mountRoutes(listRoles), { view: wireView })
     expect(result.structuredContent).toEqual({ $wire: '1.0', tool: 'list_admin_roles', method: 'GET', rows: 2 })
   })
 
   it('leaves the payload in the text block, so the model still reads the data', async () => {
-    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, undefined, { view: wireView })
+    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, mountRoutes(listRoles), { view: wireView })
     const text = result.content[0]?.text ?? ''
     expect(JSON.parse(text)).toEqual([{ name: 'admin' }, { name: 'user' }])
     expect(text).not.toContain('$wire')
@@ -54,19 +55,19 @@ describe('executeTool with a view', () => {
       seen.push(`${ctx.toolName} ${ctx.meta.method} ${ctx.meta.path}`)
       return { ok: true }
     }
-    await executeTool('create_admin_roles', createRole, { name: 'nurse' }, undefined, undefined, { view })
+    await executeTool('create_admin_roles', createRole, { name: 'nurse' }, undefined, mountRoutes(createRole), { view })
     expect(seen).toEqual(['create_admin_roles POST /admin/roles'])
   })
 
   it('keeps the payload when the view declines to render it', async () => {
-    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, undefined, {
+    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, mountRoutes(listRoles), {
       view: () => undefined,
     })
     expect(result.structuredContent).toEqual([{ name: 'admin' }, { name: 'user' }])
   })
 
   it('keeps the payload when the view throws — presentation cannot fail a call', async () => {
-    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, undefined, {
+    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, mountRoutes(listRoles), {
       view: () => { throw new Error('renderer exploded') },
     })
     expect(result.isError).toBeUndefined()
@@ -80,7 +81,7 @@ describe('executeTool with a view', () => {
       method: 'GET',
       handler: () => { throw new Error('DB down') },
     }
-    const result = await executeTool('list_admin_roles', broken, {}, undefined, undefined, {
+    const result = await executeTool('list_admin_roles', broken, {}, undefined, mountRoutes(broken), {
       view: () => { called = true; return { rendered: true } },
     })
     expect(result.isError).toBe(true)
@@ -88,7 +89,7 @@ describe('executeTool with a view', () => {
   })
 
   it('composes with the auto text format: the two halves are chosen independently', async () => {
-    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, undefined, {
+    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, mountRoutes(listRoles), {
       view: wireView,
       textFormat: 'auto',
     })
@@ -99,7 +100,7 @@ describe('executeTool with a view', () => {
   })
 
   it('changes nothing when no view is supplied', async () => {
-    const result = await executeTool('list_admin_roles', listRoles, {})
+    const result = await executeTool('list_admin_roles', listRoles, {}, undefined, mountRoutes(listRoles))
     expect(result.structuredContent).toEqual([{ name: 'admin' }, { name: 'user' }])
   })
 })

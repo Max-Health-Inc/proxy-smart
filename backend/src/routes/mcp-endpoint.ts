@@ -27,7 +27,6 @@ import {
   executeTool as pkgExecuteTool,
   executeResource as pkgExecuteResource,
   getMergedInputSchema,
-  DISPATCH_APP_KEY,
 } from '@proxy-smart/elysia-mcp'
 import type { ExecuteOptions, ToolMetadata, ResourceMetadata } from '@proxy-smart/elysia-mcp'
 import { prefabView, uiToolMeta } from '@proxy-smart/elysia-mcp/prefab'
@@ -42,15 +41,13 @@ import {
   getResourceRegistry,
   isResourceRegistryInitialized,
   pathToResourceUri,
-  getDispatchApp,
+  requireDispatchApp,
 } from '../lib/ai/tool-registry'
 import { loadMcpEndpointConfig, isToolExposed, isResourceExposed } from '../lib/mcp-endpoint-config'
 import { MCP_SCOPE_CHALLENGE } from '../lib/oauth-scopes'
 import { searchDocumentation } from '../lib/ai/rag-tools'
 import { registerReadResourceTool } from '../lib/ai/read-resource-tool'
 import { registerToolFormTool } from '../lib/ai/tool-form-tool'
-import { createAdminClient } from '../lib/keycloak-plugin'
-import { getAccessControlInstance } from '../lib/access-control/plugin'
 
 // No session store: this endpoint is stateless (see handleMcpRequest). The
 // SessionManager that used to live here held transports in PROCESS MEMORY, so
@@ -82,21 +79,6 @@ function toolExecuteOptions(): ExecuteOptions {
     : { ...TOOL_TEXT_OPTIONS }
 }
 
-// Domain-specific context decorators injected into tool/resource execution.
-// The dispatch app (resolved lazily — it is registered after this module loads)
-// routes execution through the real Elysia pipeline so guards, response-schema
-// coercion, and lifecycle hooks (e.g. admin audit logging) all run. The
-// getAdmin / getAccessControl decorators remain for the synthetic fallback path.
-function buildContextDecorators(): Record<string, unknown> {
-  const decorators: Record<string, unknown> = {
-    getAdmin: createAdminClient,
-    getAccessControl: getAccessControlInstance,
-  }
-  const app = getDispatchApp()
-  if (app) decorators[DISPATCH_APP_KEY] = app
-  return decorators
-}
-
 // ── Tool bridging ────────────────────────────────────────────────────────────
 
 /**
@@ -105,7 +87,6 @@ function buildContextDecorators(): Record<string, unknown> {
  * GET (read-only) tools are collapsed into a single `read_resource` tool.
  */
 function registerTools(server: McpServer, userRoles: string[], tokenRef: { current?: string }): void {
-  const contextDecorators = buildContextDecorators()
   const execOptions = toolExecuteOptions()
   const uiMeta = config.mcp.ui ? { _meta: uiToolMeta() } : {}
   if (isToolRegistryInitialized()) {
@@ -134,14 +115,14 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
           toolName,
           { description, inputSchema: toolSchema, ...(outputSchema ? { outputSchema } : {}), annotations, ...uiMeta },
           async (args: unknown) =>
-            pkgExecuteTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, contextDecorators, execOptions),
+            pkgExecuteTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, requireDispatchApp(), execOptions),
         )
       } else {
         server.registerTool(
           toolName,
           { description, ...(outputSchema ? { outputSchema } : {}), annotations, ...uiMeta },
           async () =>
-            pkgExecuteTool(toolName, meta, {}, tokenRef.current, contextDecorators, execOptions),
+            pkgExecuteTool(toolName, meta, {}, tokenRef.current, requireDispatchApp(), execOptions),
         )
       }
     }
@@ -197,7 +178,6 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
 function registerResources(server: McpServer, userRoles: string[], tokenRef: { current?: string }): void {
   if (!isResourceRegistryInitialized()) return
 
-  const contextDecorators = buildContextDecorators()
   const registry = getResourceRegistry()
 
   for (const [resourceName, meta] of registry) {
@@ -213,7 +193,7 @@ function registerResources(server: McpServer, userRoles: string[], tokenRef: { c
         uri,
         { description, mimeType: 'application/json' },
         async () => {
-          const result = await pkgExecuteResource(meta, {}, tokenRef.current, contextDecorators)
+          const result = await pkgExecuteResource(meta, {}, tokenRef.current, requireDispatchApp())
           return { contents: [{ uri, text: result }] }
         },
       )
@@ -228,7 +208,7 @@ function registerResources(server: McpServer, userRoles: string[], tokenRef: { c
           for (const p of meta.pathParams) {
             if (variables[p]) params[p] = String(variables[p])
           }
-          const result = await pkgExecuteResource(meta, params, tokenRef.current, contextDecorators)
+          const result = await pkgExecuteResource(meta, params, tokenRef.current, requireDispatchApp())
           return { contents: [{ uri: reqUri.href, text: result }] }
         },
       )
