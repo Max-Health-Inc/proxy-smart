@@ -6,97 +6,24 @@ The Patient API provides SMART-authenticated endpoints for patient-facing applic
 
 All patient API endpoints are under `/api/`.
 
-## Document Import
+## SMART Health Links
 
-**`POST /api/document-import/`**
+**`POST /api/shl/`** and the manifest, FHIR and DICOMweb routes beneath it.
 
-Converts a PDF document into validated FHIR resources using OCR and AI extraction.
+Spec-compliant SHL creation and manifest serving, for sharing a record by QR code. See the [SHL specification](https://build.fhir.org/ig/HL7/smart-health-cards-and-links/links-specification.html).
 
-### Request
+No real token leaves the server. The manifest carries an opaque session token whose audience points back at `/api/shl/fhir`, so a recipient calls this proxy and the backend fetches from the FHIR server with a service account. Every manifest fetch re-derives what the link asserts — how long it is good for, and what the share covers — from the share as it stands now, so correcting the rule behind a share also corrects links already in circulation, and a revoked consent makes the session inert.
 
-- **Authentication**: Bearer token (SMART access token)
-- **Content-Type**: `multipart/form-data`
+## Consent Notification
 
-| Field | Type | Description |
-|---|---|---|
-| `file` | File | PDF document to import (must be `application/pdf`) |
-| `patientId` | string | FHIR Patient ID to associate extracted resources with |
-| `engine` | string | OCR engine to use (optional) |
+**`POST /api/consent/notify-access-request`**
 
-### Response
+Notifies a patient by email that a practitioner has requested access to their data. The address is resolved from the identity provider rather than taken from the request.
 
-```json
-{
-  "success": true,
-  "resources": [
-    {
-      "resourceType": "Observation",
-      "resource": { /* validated FHIR resource */ },
-      "retriesNeeded": 0,
-      "warnings": []
-    }
-  ],
-  "failed": [
-    {
-      "resourceType": "MedicationRequest",
-      "errors": ["Validation error details"],
-      "warnings": [],
-      "retriesAttempted": 3
-    }
-  ],
-  "processingTimeMs": 4523
-}
-```
+## Document import and the scribe have moved
 
-### Workflow
+`POST /api/document-import/`, `POST /api/patient-scribe/` and `POST /admin/document-import/` were removed.
 
-1. Patient uploads a PDF (lab results, discharge summary, etc.) through the Patient Portal
-2. Backend extracts text via OCR
-3. AI generates structured FHIR resources from the extracted text
-4. BabelFHIR-TS validates each resource against FHIR profiles (with retries)
-5. Validated resources are returned for patient review in the `ResourceReviewCard` component
-6. Patient confirms and the portal POSTs resources through the FHIR proxy
+Turning a PDF or a free-text description into FHIR resources is not an authorization concern. Keeping it here meant this service also carried a PDF text extractor and the Java runtime it needed, and reached for an AI model — none of which an authenticating proxy has any reason to contain. Document import belongs to whichever service in a deployment owns clinical ingestion, and a self-hosted deployment that wants it needs to run one; this proxy no longer provides it.
 
-### Security
-
-- The token's patient claim is checked against the requested `patientId`
-- Resources are only *returned* for review -- the patient portal must separately POST them through the FHIR proxy, which enforces scope, consent, and audit controls
-- Requires AI to be configured (`OPENAI_API_KEY`)
-
-## Patient Scribe
-
-**`POST /api/patient-scribe/`**
-
-Converts free-text descriptions into validated FHIR resources using AI.
-
-### Request
-
-- **Authentication**: Bearer token (SMART access token)
-- **Content-Type**: `application/json`
-
-| Field | Type | Description |
-|---|---|---|
-| `text` | string | Free text describing symptoms, medications, etc. (max 50,000 chars) |
-| `patientId` | string | FHIR Patient ID to associate resources with |
-
-### Response
-
-Same format as Document Import -- returns validated and failed resources with processing time.
-
-### Use Cases
-
-- Patient describes symptoms in their own words → AI generates Condition and Observation resources
-- Patient lists current medications → AI generates MedicationStatement resources
-- Patient enters allergy information → AI generates AllergyIntolerance resources
-
-### Security
-
-- Same token validation as Document Import
-- Text input is length-limited (50,000 characters)
-- Requires AI to be configured (`OPENAI_API_KEY`)
-
-## Admin Document Import
-
-**`POST /admin/document-import/`**
-
-Admin-authenticated version of the document import pipeline. Uses admin bearer token instead of SMART patient token. Available for administrative bulk import workflows.
+What has not changed is where the resulting resources go. An importer only ever returned them for review; the portal still POSTs the ones a patient confirms through the FHIR proxy, which is what enforces scope, consent and audit.

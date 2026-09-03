@@ -80,12 +80,11 @@ WORKDIR /app
 ARG BUILD_SHA=""
 ENV BUILD_SHA=$BUILD_SHA
 
-# Install minimal runtime dependencies (Java 21 needed for @opendataloader/pdf)
+# Install minimal runtime dependencies
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
     ca-certificates \
     curl \
-    openjdk-21-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
 # Amazon RDS CA bundle, for VERIFIED TLS to RDS Postgres.
