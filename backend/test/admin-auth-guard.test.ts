@@ -233,6 +233,34 @@ describe('Admin auth guard — positive (no regression)', () => {
  * before the guard answers, so a bodyless PATCH is a 422 rather than a 401. The guard is one
  * `onBeforeHandle` over the whole router, so these three stand for all of them.
  */
+describe('smart-config reconciliation is admin-only', () => {
+  // These write to the realm — reconcile-resource-indicators creates clients,
+  // scopes and audience mappers; reconcile-client-home-urls sets baseUrl on every
+  // SMART client. Their handlers called plain validateToken, which authenticates
+  // but checks no role, so the guard was the only thing enforcing admin. Pinned
+  // here so a handler-level change cannot quietly become the sole gate again.
+  const PATHS = [
+    '/admin/smart-config/refresh',
+    '/admin/smart-config/reconcile-resource-indicators',
+    '/admin/smart-config/reconcile-client-home-urls',
+  ]
+
+  it.each(PATHS)('refuses POST %s with no token', async (path) => {
+    const res = await createApp().handle(adminReq('POST', path))
+    expect(res.status).toBe(401)
+  })
+
+  it.each(PATHS)('refuses POST %s with a valid NON-admin token', async (path) => {
+    const res = await createApp().handle(adminReq('POST', path, nonAdminToken()))
+    expect(res.status).toBe(403)
+  })
+
+  it.each(PATHS)('refuses POST %s with a FHIR-audienced end-user token', async (path) => {
+    const res = await createApp().handle(adminReq('POST', path, fhirAudiencedToken()))
+    expect([401, 403]).toContain(res.status)
+  })
+})
+
 describe('FHIR server management is admin-only', () => {
   function req(method: string, path: string, token?: string, body?: unknown) {
     const headers: Record<string, string> = {}
