@@ -8,6 +8,8 @@
  */
 
 import { describe, it, expect } from 'bun:test'
+import { Elysia } from 'elysia'
+import { mountRoutes } from './helpers/mount'
 import { Type } from '@sinclair/typebox'
 import {
   extractRouteTools,
@@ -243,7 +245,7 @@ describe('executeTool', () => {
       handler: (ctx: { body: { message: string } }) => ({ echo: ctx.body.message }),
     }
 
-    const result = await executeTool('create_admin_test', meta, { message: 'hello' })
+    const result = await executeTool('create_admin_test', meta, { message: 'hello' }, undefined, mountRoutes(meta))
     expect(result.isError).toBeUndefined()
     const parsed = JSON.parse(result.content[0].text)
     expect(parsed.echo).toBe('hello')
@@ -259,7 +261,7 @@ describe('executeTool', () => {
       }),
     }
 
-    const result = await executeTool('update_admin_users_userId', meta, { userId: '123', name: 'Alice' })
+    const result = await executeTool('update_admin_users_userId', meta, { userId: '123', name: 'Alice' }, undefined, mountRoutes(meta))
     expect(result.isError).toBeUndefined()
     const parsed = JSON.parse(result.content[0].text)
     expect(parsed.userId).toBe('123')
@@ -273,31 +275,39 @@ describe('executeTool', () => {
       handler: () => { throw new Error('Boom') },
     }
 
-    const result = await executeTool('create_admin_fail', meta, {})
+    const result = await executeTool('create_admin_fail', meta, {}, undefined, mountRoutes(meta))
     expect(result.isError).toBe(true)
     expect(result.content[0].text).toContain('Boom')
   })
 
-  it('reports missing handler', async () => {
+  it('reports a route the app does not serve', async () => {
+    // The executor no longer inspects meta.handler — the app decides what is
+    // callable, because dispatch goes through it. A tool whose route is not
+    // mounted is an error result, not a direct handler call.
     const meta: ToolMetadata = {
       path: '/admin/nohandler',
       method: 'POST',
-      handler: 'not a function',
+      handler: () => 'never reached',
     }
 
-    const result = await executeTool('create_admin_nohandler', meta, {})
+    const result = await executeTool('create_admin_nohandler', meta, {}, undefined, new Elysia())
     expect(result.isError).toBe(true)
-    expect(result.content[0].text).toContain('no callable handler')
   })
 
-  it('injects context decorators', async () => {
+  it('lets the app supply the handler its decorators', async () => {
+    // Decorators used to be handed to the executor and spread into a synthetic
+    // context. They come from the app now, which is where Elysia puts them —
+    // so this exercises the mechanism a real deployment actually uses.
     const meta: ToolMetadata = {
       path: '/admin/decorated',
       method: 'POST',
-      handler: (ctx: { body: object; getDb: () => string }) => ({ db: ctx.getDb() }),
+      handler: () => ({ db: 'unused — dispatch goes through the app' }),
     }
+    const app = new Elysia()
+      .decorate('getDb', () => 'postgres')
+      .post('/admin/decorated', ({ getDb }) => ({ db: getDb() }))
 
-    const result = await executeTool('create_admin_decorated', meta, {}, undefined, { getDb: () => 'postgres' })
+    const result = await executeTool('create_admin_decorated', meta, {}, undefined, app)
     const parsed = JSON.parse(result.content[0].text)
     expect(parsed.db).toBe('postgres')
   })
@@ -310,7 +320,7 @@ describe('executeTool', () => {
       schema: Type.Object({ name: Type.String() }),
     }
 
-    const result = await executeTool('create_admin_strict', meta, { name: 123 as unknown as string })
+    const result = await executeTool('create_admin_strict', meta, { name: 123 as unknown as string }, undefined, mountRoutes(meta))
     expect(result.isError).toBe(true)
     expect(result.content[0].text).toContain('Validation error')
   })
@@ -322,7 +332,7 @@ describe('executeTool', () => {
       handler: () => ({ id: 'abc', ok: true }),
     }
 
-    const result = await executeTool('create_admin_obj', meta, {})
+    const result = await executeTool('create_admin_obj', meta, {}, undefined, mountRoutes(meta))
     expect(result.isError).toBeUndefined()
     // text block always present
     expect(JSON.parse(result.content[0].text)).toEqual({ id: 'abc', ok: true })
@@ -337,7 +347,7 @@ describe('executeTool', () => {
       handler: () => [1, 2, 3],
     }
 
-    const result = await executeTool('create_admin_list', meta, {})
+    const result = await executeTool('create_admin_list', meta, {}, undefined, mountRoutes(meta))
     expect(result.isError).toBeUndefined()
     // Arrays used to be dropped here because the 2025 wire shape requires
     // structuredContent to be an object. Reconciling that is the SDK's job:
@@ -353,10 +363,10 @@ describe('executeTool', () => {
     // A bare primitive carries nothing the text block does not already, so it
     // would only add a `{result:…}` wrap on 2025-era clients for no gain.
     const primitive: ToolMetadata = { path: '/admin/n', method: 'POST', handler: () => 42 }
-    expect((await executeTool('create_admin_n', primitive, {})).structuredContent).toBeUndefined()
+    expect((await executeTool('create_admin_n', primitive, {}, undefined, mountRoutes(primitive))).structuredContent).toBeUndefined()
 
     const plain: ToolMetadata = { path: '/admin/s', method: 'POST', handler: () => 'not json' }
-    expect((await executeTool('create_admin_s', plain, {})).structuredContent).toBeUndefined()
+    expect((await executeTool('create_admin_s', plain, {}, undefined, mountRoutes(plain))).structuredContent).toBeUndefined()
   })
 })
 
@@ -401,7 +411,7 @@ describe('executeResource', () => {
       pathParams: [],
     }
 
-    const result = await executeResource(meta, {})
+    const result = await executeResource(meta, {}, undefined, mountRoutes(meta))
     const parsed = JSON.parse(result)
     expect(parsed.logo).toBe('test.png')
   })
@@ -414,12 +424,12 @@ describe('executeResource', () => {
       pathParams: ['userId'],
     }
 
-    const result = await executeResource(meta, { userId: '456' })
+    const result = await executeResource(meta, { userId: '456' }, undefined, mountRoutes(meta))
     const parsed = JSON.parse(result)
     expect(parsed.id).toBe('456')
   })
 
-  it('handles errors gracefully', async () => {
+  it('surfaces a handler error to the caller', async () => {
     const meta: ResourceMetadata = {
       path: '/admin/broken',
       method: 'GET',
@@ -427,8 +437,11 @@ describe('executeResource', () => {
       pathParams: [],
     }
 
-    const result = await executeResource(meta, {})
-    const parsed = JSON.parse(result)
-    expect(parsed.error).toContain('DB down')
+    // The reason reaches the caller, but the envelope is Elysia's now rather
+    // than the executor's own JSON wrapper — errors are handled by the pipeline
+    // that runs the route. Asserting containment rather than a shape keeps this
+    // from pinning framework internals.
+    const result = await executeResource(meta, {}, undefined, mountRoutes(meta))
+    expect(result).toContain('DB down')
   })
 })
