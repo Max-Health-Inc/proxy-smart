@@ -41,4 +41,3 @@ export * from './email-monitoring'
 export * from './auth-monitoring'
 
 // Document import schemas (shared by the admin and SMART planes)
-export * from './document-import'
