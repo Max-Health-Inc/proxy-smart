@@ -9,46 +9,34 @@ Disallow: /auth
 Disallow: /mcp
 Disallow: /webapp
 
-# AI Crawlers — Welcome
+# AI crawlers — welcome on the public pages.
+#
+# One group for all of them, carrying the SAME disallow list as the wildcard above.
+# robots.txt has no inheritance: a named User-agent group REPLACES the `*` group rather
+# than extending it. These groups each named /admin, /fhir and /auth but omitted /mcp and
+# /webapp, so every crawler listed here was told those two were fair game while `*` was not.
+# Repeating the list once, rather than per crawler, is also why it can no longer drift.
+#
+# The set is the org's: GPTBot trains, OAI-SearchBot indexes for ChatGPT search and
+# ChatGPT-User fetches on a user's behalf — only the first was named here, so the two that
+# actually drive a citation were left to the wildcard. Same for the current Claude pair.
 User-agent: GPTBot
-Allow: /
-Allow: /llms.txt
-Allow: /docs
-Disallow: /admin
-Disallow: /fhir
-Disallow: /auth
-
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
 User-agent: ClaudeBot
-Allow: /
-Allow: /llms.txt
-Allow: /docs
-Disallow: /admin
-Disallow: /fhir
-Disallow: /auth
-
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
 User-agent: Google-Extended
-Allow: /
-Allow: /llms.txt
-Allow: /docs
-Disallow: /admin
-Disallow: /fhir
-Disallow: /auth
-
+User-agent: Applebot-Extended
 User-agent: Bingbot
 Allow: /
-Allow: /llms.txt
-Allow: /docs
 Disallow: /admin
 Disallow: /fhir
 Disallow: /auth
-
-User-agent: PerplexityBot
-Allow: /
-Allow: /llms.txt
-Allow: /docs
-Disallow: /admin
-Disallow: /fhir
-Disallow: /auth
+Disallow: /mcp
+Disallow: /webapp
 
 # Sitemap
 Sitemap: https://proxy-smart.com/sitemap.xml
