@@ -26,7 +26,6 @@ import { userFederationMapperRoutes } from './user-federation-mappers'
 import { brandingAdminRoutes } from './branding'
 import { scopeMappersRoutes } from './scope-mappers'
 import { smartScopesRoutes } from './smart-scopes'
-import { documentImportRoutes } from './document-import'
 import { organizationsRoutes } from './organizations'
 import { appStoreAdminRoutes } from './app-store'
 import { clientPoliciesRoutes } from './client-policies'
@@ -138,8 +137,6 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(scopeMappersRoutes)
   // SMART client scope CRUD management
   .use(smartScopesRoutes)
-  // Document import (PDF → AI → FHIR)
-  .use(documentImportRoutes)
   // Keycloak Organizations management
   .use(organizationsRoutes)
   // App Store visibility management
