@@ -101,9 +101,11 @@ jobs:
       # is unforgiving about how one is provisioned, and a credential that cannot be read back
       # is a bad thing to depend on for a release. It stays where it is genuinely needed: the
       # install step, which reads packages from OTHER repositories that `github.token` cannot.
+      # Reads resolve ./.npmrc's ${GH_PACKAGES_TOKEN}; writes stay on NODE_AUTH_TOKEN.
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
+          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
           OWNER_SCOPE: '@${{ github.repository_owner }}'
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
@@ -126,16 +128,7 @@ jobs:
               continue
             fi
 
-            # `npm view` exits non-zero for an unpublished version — that is the
-            # success path here, so swallow it and test the captured output. But ONLY that:
-            # an auth failure is also non-zero and also empty, and swallowing it too turned
-            # "I cannot see the registry" into "not published yet, go ahead and publish".
-            VIEW_ERR=$(mktemp)
-            FOUND=$(npm view "$NAME@$VERSION" version --registry=https://npm.pkg.github.com 2>"$VIEW_ERR" || true)
-            if [ -z "$FOUND" ] && grep -qE 'E401|ENEEDAUTH|EAUTHUNKNOWN' "$VIEW_ERR"; then
-              echo "::error::Cannot read $NAME from the registry — the token is not authenticating. Refusing to treat that as unpublished."
-              exit 1
-            fi
+            FOUND=$(.github/scripts/npm-registry-version.sh "$NAME@$VERSION")
             if [ -n "$FOUND" ]; then
               echo "- \`$NAME@$VERSION\` already published." >> "$GITHUB_STEP_SUMMARY"
               SKIPPED=$((SKIPPED+1))
