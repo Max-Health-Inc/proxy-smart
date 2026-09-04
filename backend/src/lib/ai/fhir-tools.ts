@@ -22,7 +22,7 @@ import { checkConsentWithIal, getConsentConfig } from '../consent'
 import { enforceScopeAccess, enforceRoleBasedFiltering, type AccessControlContext } from '../smart-access-control'
 import { enforceTenantIsolation } from '../tenant-isolation'
 import { getServerCapabilities, normalizeSearchParams, parseFhirPath, isInteractionSupported } from '../fhir-capabilities'
-import { fetchWithMtls, getMtlsConfig } from '../../routes/fhir-servers'
+import { fetchWithMtls, getMtlsConfig } from '../mtls'
 import { fhirProxyMetricsLogger } from '../fhir-proxy-metrics-logger'
 import fetch from 'cross-fetch'
 
