@@ -16,6 +16,7 @@
 import { Elysia, t, type TSchema } from 'elysia'
 import { CommonErrorResponses } from '@/schemas'
 import { StreamResponse } from '@/schemas/monitoring'
+import type { MonitoringLogger } from '@/lib/events/journal'
 import {
   createSseStream,
   openStreamResponse,
@@ -120,13 +121,6 @@ export function createMonitoringRoutes(cfg: MonitoringRoutesConfig) {
 }
 
 // ─── Event-logger shorthand ──────────────────────────────────────
-
-/** The slice of BaseEventsLogger the conventional monitoring module needs. */
-export interface MonitoringLogger<TEvent, TAnalytics> {
-  subscribe(cb: (event: TEvent) => void): () => void
-  subscribeAnalytics(cb: (analytics: TAnalytics) => void): () => void
-  getAnalytics(): TAnalytics | null
-}
 
 export interface EventLoggerMonitoringConfig<TEvent, TAnalytics> {
   prefix: string

@@ -4,28 +4,20 @@
 /**
  * Base Events Logger
  *
- * Generic event logger that provides the shared infrastructure for all
- * Keycloak event pollers (auth, email, etc.):
- *  - JSONL persistence
- *  - In-memory ring buffer
- *  - Pub/sub for events & analytics
- *  - Incremental Keycloak polling via client_credentials
- *  - Hourly-bucketed analytics calculation
+ * The Keycloak-polling half of an events logger: incremental event fetch via
+ * client_credentials on top of the shared EventJournal, which owns persistence,
+ * the ring buffer, pub/sub and the analytics cycle.
  *
- * Subclasses provide:
- *  - Event types to poll
- *  - Event mapping (Keycloak → domain event)
- *  - Analytics calculation (domain-specific aggregations)
- *  - Logger channel name
+ * Subclasses provide the event types to poll, the Keycloak → domain mapping and
+ * their own analytics.
  */
 
-import { appendFile, mkdir, readFile } from 'fs/promises'
-import { existsSync } from 'fs'
-import { join } from 'path'
-import { logger } from './logger'
 import { config } from '../config'
+import { EventJournal, type JournalLogChannel } from './events/journal'
+import { bucketByHour, countBy, percent } from './events/aggregate'
+import { TokenCache, type FetchedToken } from './cache/token-cache'
 
-// ─── Types ───────────────────────────────────────────────────────
+export { DEFAULT_RING_BUFFER_SIZE as RING_BUFFER_SIZE } from './events/journal'
 
 /** Keycloak EventRepresentation shape */
 export interface KeycloakEvent {
@@ -89,8 +81,6 @@ export function mapBaseKeycloakEvent(kc: KeycloakEvent, idPrefix: string): Mappe
   }
 }
 
-// ─── Configuration ───────────────────────────────────────────────
-
 export interface EventLoggerConfig<TEvent extends BaseEvent> {
   /** Subdirectory name under logs/ (e.g. 'auth-events', 'email-events') */
   logSubdir: string
@@ -98,62 +88,64 @@ export interface EventLoggerConfig<TEvent extends BaseEvent> {
   logFilename: string
   /** Keycloak event types to poll */
   eventTypes: string[]
-  /** Logger channel for log messages */
-  logChannel: keyof typeof logger
+  /** Log channel for this logger's own messages */
+  channel: JournalLogChannel
   /** Map a Keycloak event to a domain event */
   mapEvent: (kc: KeycloakEvent) => TEvent
   /** ID prefix for generated IDs (e.g. 'auth', 'email') */
   idPrefix: string
+  /** Absolute log directory override; tests point it at a temp dir. */
+  logDir?: string
 }
 
-// ─── Base class ──────────────────────────────────────────────────
-
-export const RING_BUFFER_SIZE = 1000
 const DEFAULT_POLL_INTERVAL_MS = 60_000
+const TOKEN_KEY = 'events-poller'
+
+/** Shared across pollers, so two loggers starting together fetch one token. */
+const adminTokens = new TokenCache()
+
+async function fetchPollerToken(): Promise<FetchedToken> {
+  const tokenUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
+  const res = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: config.keycloak.adminClientId ?? '',
+      client_secret: config.keycloak.adminClientSecret ?? '',
+    }),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Admin token request failed: ${res.status}`)
+  }
+
+  const data: { access_token: string; expires_in?: number } = await res.json()
+  return { token: data.access_token, expiresInSeconds: data.expires_in }
+}
 
 export abstract class BaseEventsLogger<
   TEvent extends BaseEvent,
   TAnalytics extends BaseAnalytics,
-> {
-  protected readonly logDir: string
-  protected readonly eventsFile: string
-  protected events: TEvent[] = []
-  protected analytics: TAnalytics | null = null
-  protected subscribers = new Set<(event: TEvent) => void>()
-  protected analyticsSubscribers = new Set<(analytics: TAnalytics) => void>()
+> extends EventJournal<TEvent, TAnalytics> {
   private timer: ReturnType<typeof setInterval> | null = null
-  private initialized = false
   private lastPollTimestamp = 0
 
-  /** Shared admin token cache — static so all logger instances reuse the same token */
-  private static cachedToken: string | null = null
-  private static cachedTokenExpiry = 0
-
   constructor(protected readonly cfg: EventLoggerConfig<TEvent>) {
-    this.logDir = join(process.cwd(), 'logs', cfg.logSubdir)
-    this.eventsFile = join(this.logDir, cfg.logFilename)
-  }
-
-  // ─── Lifecycle ──────────────────────────────────────────────
-
-  async initialize(): Promise<void> {
-    if (this.initialized) return
-
-    if (!existsSync(this.logDir)) {
-      await mkdir(this.logDir, { recursive: true })
-    }
-
-    await this.loadRecentEvents()
-    this.recalculateAnalytics()
-    this.initialized = true
-    this.log('info', `${this.cfg.idPrefix} events logger initialized`, { eventsLoaded: this.events.length })
+    super({
+      logSubdir: cfg.logSubdir,
+      logFilename: cfg.logFilename,
+      idPrefix: cfg.idPrefix,
+      channel: cfg.channel,
+      logDir: cfg.logDir,
+    })
   }
 
   start(intervalMs = DEFAULT_POLL_INTERVAL_MS): void {
     if (this.timer) return
-    this.pollKeycloakEvents()
-    this.timer = setInterval(() => this.pollKeycloakEvents(), intervalMs)
-    this.log('info', `${this.cfg.idPrefix} events poller started`, { intervalMs })
+    void this.pollKeycloakEvents()
+    this.timer = setInterval(() => void this.pollKeycloakEvents(), intervalMs)
+    this.channel.info(`${this.cfg.idPrefix} events poller started`, { intervalMs })
   }
 
   stop(): void {
@@ -163,7 +155,47 @@ export abstract class BaseEventsLogger<
     }
   }
 
-  // ─── Keycloak polling ──────────────────────────────────────
+  getRecentEvents(opts?: {
+    limit?: number
+    type?: string
+    success?: boolean
+    since?: Date
+  }): TEvent[] {
+    return this.selectEvents(
+      opts,
+      event => !opts?.type || opts.type === 'all' || event.type === opts.type,
+      event => opts?.success === undefined || event.success === opts.success,
+    )
+  }
+
+  /** Base analytics fields shared by all event loggers. */
+  protected computeBaseAnalytics(recent: TEvent[]): BaseAnalytics {
+    return {
+      totalEvents: recent.length,
+      successRate: percent(recent.filter(event => event.success).length, recent.length, {
+        round: true,
+        fallback: 100,
+      }),
+      eventsByType: countBy(recent, event => event.type),
+      hourlyStats: bucketByHour(
+        recent,
+        () => ({ success: 0, failure: 0 }),
+        (bucket, event) => {
+          if (event.success) bucket.success++
+          else bucket.failure++
+        },
+      ).map(({ hour, success, failure }) => ({ hour, success, failure, total: success + failure })),
+      timestamp: new Date().toISOString(),
+    }
+  }
+
+  /** The newest loaded event sets the poll cursor, so a restart does not refetch. */
+  protected afterLoad(): void {
+    const newest = this.events[0]
+    if (!newest) return
+    const at = Date.parse(newest.timestamp)
+    if (at > this.lastPollTimestamp) this.lastPollTimestamp = at
+  }
 
   private async pollKeycloakEvents(): Promise<void> {
     if (!config.keycloak.isConfigured || !config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
@@ -175,8 +207,8 @@ export abstract class BaseEventsLogger<
       if (!token) return
 
       const params = new URLSearchParams()
-      for (const t of this.cfg.eventTypes) {
-        params.append('type', t)
+      for (const type of this.cfg.eventTypes) {
+        params.append('type', type)
       }
       if (this.lastPollTimestamp > 0) {
         params.set('dateFrom', String(this.lastPollTimestamp + 1))
@@ -185,214 +217,43 @@ export abstract class BaseEventsLogger<
       params.set('direction', 'desc')
 
       const url = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/events?${params.toString()}`
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
 
       if (!res.ok) {
-        this.log('warn', `Failed to fetch Keycloak ${this.cfg.idPrefix} events`, { status: res.status })
+        this.channel.warn(`Failed to fetch Keycloak ${this.cfg.idPrefix} events`, { status: res.status })
         return
       }
 
       const kcEvents: KeycloakEvent[] = await res.json()
       if (kcEvents.length === 0) return
 
-      const sorted = [...kcEvents].reverse()
-      for (const kc of sorted) {
-        const event = this.cfg.mapEvent(kc)
-        await this.persistEvent(event)
+      for (const kc of [...kcEvents].reverse()) {
+        await this.append(this.cfg.mapEvent(kc), { dedupe: true })
       }
 
-      const maxTime = Math.max(...kcEvents.map(e => e.time ?? 0))
-      if (maxTime > this.lastPollTimestamp) {
-        this.lastPollTimestamp = maxTime
+      const newest = Math.max(...kcEvents.map(event => event.time ?? 0))
+      if (newest > this.lastPollTimestamp) {
+        this.lastPollTimestamp = newest
       }
 
-      this.recalculateAnalytics()
-      this.log('debug', `Polled ${this.cfg.idPrefix} events from Keycloak`, { count: kcEvents.length })
+      await this.refreshAnalytics()
+      this.channel.debug(`Polled ${this.cfg.idPrefix} events from Keycloak`, { count: kcEvents.length })
     } catch (error) {
-      this.log('error', `Error polling Keycloak ${this.cfg.idPrefix} events`, {
+      this.channel.error(`Error polling Keycloak ${this.cfg.idPrefix} events`, {
         error: error instanceof Error ? error.message : String(error),
       })
     }
   }
 
+  /** Null on any failure: a poll is skipped, and the next one retries. */
   private async getAdminToken(): Promise<string | null> {
-    // Return cached token if still valid (with 30s safety margin)
-    const now = Date.now()
-    if (BaseEventsLogger.cachedToken && now < BaseEventsLogger.cachedTokenExpiry - 30_000) {
-      return BaseEventsLogger.cachedToken
-    }
-
     try {
-      const tokenUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
-      const res = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'client_credentials',
-          client_id: config.keycloak.adminClientId!,
-          client_secret: config.keycloak.adminClientSecret!,
-        }),
-      })
-
-      if (!res.ok) {
-        this.log('warn', `Failed to obtain admin token for ${this.cfg.idPrefix} events polling`, { status: res.status })
-        return null
-      }
-
-      const data = await res.json() as { access_token: string; expires_in?: number }
-      BaseEventsLogger.cachedToken = data.access_token
-      // Default to 5 minutes if expires_in not provided
-      BaseEventsLogger.cachedTokenExpiry = now + (data.expires_in ?? 300) * 1000
-      return data.access_token
+      return await adminTokens.get(TOKEN_KEY, fetchPollerToken)
     } catch (error) {
-      this.log('error', 'Error obtaining admin token', {
+      this.channel.error(`Failed to obtain admin token for ${this.cfg.idPrefix} events polling`, {
         error: error instanceof Error ? error.message : String(error),
       })
       return null
-    }
-  }
-
-  // ─── Persistence ───────────────────────────────────────────
-
-  private async persistEvent(event: TEvent): Promise<void> {
-    if (this.events.some(e => e.id === event.id)) return
-
-    this.events.unshift(event)
-    if (this.events.length > RING_BUFFER_SIZE) {
-      this.events.length = RING_BUFFER_SIZE
-    }
-
-    try {
-      await appendFile(this.eventsFile, JSON.stringify(event) + '\n', 'utf8')
-    } catch (e) {
-      this.log('error', `Failed to append ${this.cfg.idPrefix} event to log`, { error: String(e) })
-    }
-
-    for (const cb of this.subscribers) {
-      try { cb(event) } catch { /* swallow */ }
-    }
-  }
-
-  // ─── Load persisted data ───────────────────────────────────
-
-  private async loadRecentEvents(): Promise<void> {
-    if (!existsSync(this.eventsFile)) return
-    try {
-      const raw = await readFile(this.eventsFile, 'utf8')
-      const lines = raw.trim().split('\n').filter(Boolean)
-      const start = Math.max(0, lines.length - RING_BUFFER_SIZE)
-      for (let i = start; i < lines.length; i++) {
-        try {
-          this.events.push(JSON.parse(lines[i]))
-        } catch { /* skip corrupt lines */ }
-      }
-      this.events.reverse()
-
-      if (this.events.length > 0) {
-        const latest = new Date(this.events[0].timestamp).getTime()
-        if (latest > this.lastPollTimestamp) this.lastPollTimestamp = latest
-      }
-    } catch { /* file may not exist yet */ }
-  }
-
-  // ─── Query API ────────────────────────────────────────────
-
-  getRecentEvents(opts?: {
-    limit?: number
-    type?: string
-    success?: boolean
-    since?: Date
-  }): TEvent[] {
-    let result = [...this.events]
-    if (opts?.type && opts.type !== 'all') result = result.filter(e => e.type === opts.type)
-    if (opts?.success !== undefined) result = result.filter(e => e.success === opts.success)
-    if (opts?.since) {
-      const since = opts.since.getTime()
-      result = result.filter(e => new Date(e.timestamp).getTime() >= since)
-    }
-    if (opts?.limit) result = result.slice(0, opts.limit)
-    return result
-  }
-
-  getAnalytics(): TAnalytics | null {
-    return this.analytics
-  }
-
-  // ─── Subscriptions ────────────────────────────────────────
-
-  subscribe(cb: (event: TEvent) => void): () => void {
-    this.subscribers.add(cb)
-    return () => this.subscribers.delete(cb)
-  }
-
-  subscribeAnalytics(cb: (analytics: TAnalytics) => void): () => void {
-    this.analyticsSubscribers.add(cb)
-    return () => this.analyticsSubscribers.delete(cb)
-  }
-
-  // ─── Analytics ────────────────────────────────────────────
-
-  /**
-   * Subclasses override this to add domain-specific analytics fields.
-   * The base implementation provides hourly stats, eventsByType, successRate.
-   */
-  protected abstract computeAnalytics(recentEvents: TEvent[]): TAnalytics
-
-  private recalculateAnalytics(): void {
-    try {
-      const now = new Date()
-      const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-      const recent = this.events.filter(e => new Date(e.timestamp) >= last24h)
-
-      this.analytics = this.computeAnalytics(recent)
-
-      for (const cb of this.analyticsSubscribers) {
-        try { cb(this.analytics) } catch { /* swallow */ }
-      }
-    } catch (error) {
-      this.log('error', `Failed to recalculate ${this.cfg.idPrefix} analytics`, {
-        error: error instanceof Error ? error.message : String(error),
-      })
-    }
-  }
-
-  // ─── Helpers ──────────────────────────────────────────────
-
-  /** Compute base analytics fields shared by all event loggers */
-  protected computeBaseAnalytics(recent: TEvent[]): BaseAnalytics {
-    const successful = recent.filter(e => e.success).length
-    const eventsByType: Record<string, number> = {}
-    for (const e of recent) {
-      eventsByType[e.type] = (eventsByType[e.type] ?? 0) + 1
-    }
-
-    const hourBuckets = new Map<string, { success: number; failure: number }>()
-    for (const e of recent) {
-      const hour = new Date(e.timestamp).toISOString().slice(0, 13) + ':00:00.000Z'
-      let bucket = hourBuckets.get(hour)
-      if (!bucket) { bucket = { success: 0, failure: 0 }; hourBuckets.set(hour, bucket) }
-      if (e.success) bucket.success++
-      else bucket.failure++
-    }
-    const hourlyStats = Array.from(hourBuckets.entries())
-      .map(([hour, s]) => ({ hour, ...s, total: s.success + s.failure }))
-      .sort((a, b) => a.hour.localeCompare(b.hour))
-
-    return {
-      totalEvents: recent.length,
-      successRate: recent.length > 0 ? Math.round((successful / recent.length) * 10000) / 100 : 100,
-      eventsByType,
-      hourlyStats,
-      timestamp: new Date().toISOString(),
-    }
-  }
-
-  private log(level: 'info' | 'warn' | 'error' | 'debug', message: string, meta?: Record<string, unknown>): void {
-    const channel = logger[this.cfg.logChannel]
-    if (channel && typeof channel === 'object' && level in channel) {
-      (channel as Record<string, (msg: string, meta?: Record<string, unknown>) => void>)[level](message, meta)
     }
   }
 }
