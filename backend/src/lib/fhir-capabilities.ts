@@ -3,7 +3,7 @@
 
 import fetch from 'cross-fetch'
 import { logger } from './logger'
-import { fetchWithMtls, getMtlsConfig } from '../routes/fhir-servers'
+import { fetchWithMtls, getMtlsConfig } from './mtls'
 
 // ── CapabilityStatement raw types (FHIR R4/R5 complete) ─────────────────────
 

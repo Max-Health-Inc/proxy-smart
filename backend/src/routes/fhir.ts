@@ -12,7 +12,7 @@ import { CommonErrorResponses, ErrorResponse, CacheRefreshResponse, SmartConfigu
 import { smartConfigService } from '../lib/smart-config'
 import { withSmartSecurity } from '../lib/capability-security'
 import { logger } from '../lib/logger'
-import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
+import { fetchWithMtls, getMtlsConfig } from '@/lib/mtls'
 import { checkConsentWithIal, getConsentConfig } from '../lib/consent'
 import { enforceScopeAccess, enforceRoleBasedFiltering, type AccessControlContext } from '../lib/smart-access-control'
 import { enforceTenantIsolation } from '../lib/tenant-isolation'
