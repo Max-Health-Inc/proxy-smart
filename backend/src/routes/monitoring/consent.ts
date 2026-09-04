@@ -32,14 +32,14 @@ export const consentMonitoringRoutes = createMonitoringRoutes({
     {
       path: '/events/stream',
       connectionMessage: 'Connected to consent events stream',
-      subscribe: (emit) => consentMetricsLogger.subscribeToEvents(emit),
+      subscribe: (emit) => consentMetricsLogger.subscribe(emit),
       summary: 'Consent Events Stream',
       description: 'SSE stream of real-time consent decision events',
     },
     {
       path: '/analytics/stream',
       initial: () => consentMetricsLogger.getAnalytics(),
-      subscribe: (emit) => consentMetricsLogger.subscribeToAnalytics(emit),
+      subscribe: (emit) => consentMetricsLogger.subscribeAnalytics(emit),
       summary: 'Consent Analytics Stream',
       description: 'SSE stream of real-time consent decision analytics',
     },

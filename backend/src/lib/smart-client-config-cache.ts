@@ -15,6 +15,7 @@ import { isCimdClientId, resolveCimdRedirectUris, type SmartProxyLogger } from '
 import { getAdminClient } from '@/lib/kc-admin-factory'
 import { parsePatientFacing } from '@/lib/smart-client-enrichment'
 import { logger } from '@/lib/logger'
+import { TtlCache } from '@/lib/cache/ttl-cache'
 
 /** The lib takes a flat logger; adapt our structured one once, here. */
 const smartLogger: SmartProxyLogger = {
@@ -52,11 +53,6 @@ export type ClientLookup =
 /** How the cache reaches the client directory. Injectable so tests need no module mocking. */
 export type ClientLookupSource = (clientId: string) => Promise<ClientLookup>
 
-interface CacheEntry {
-  config: SmartClientConfig
-  expiresAt: number
-}
-
 const DEFAULT_TTL_MS = 5 * 60 * 1000 // 5 minutes
 /** Absence is usually "not created yet", so re-ask soon (admin create/recreate races). */
 const ABSENT_TTL_MS = 30 * 1000
@@ -71,23 +67,21 @@ const EMPTY_CONFIG: SmartClientConfig = { redirectUris: [] }
  * this whole module would otherwise make these paths untestable.
  */
 export function createClientConfigCache(source: ClientLookupSource) {
-  const cache = new Map<string, CacheEntry>()
+  const cache = new TtlCache<SmartClientConfig>({ ttlMs: DEFAULT_TTL_MS })
 
   /** A failed lookup is NEVER cached — that would stretch one hiccup across the whole TTL. */
   async function lookup(clientId: string): Promise<ClientLookup> {
-    const now = Date.now()
     const cached = cache.get(clientId)
-
-    if (cached && now < cached.expiresAt) {
-      return { status: 'found', config: cached.config }
+    if (cached) {
+      return { status: 'found', config: cached }
     }
 
     const result = await source(clientId)
 
     if (result.status === 'found') {
-      cache.set(clientId, { config: result.config, expiresAt: now + DEFAULT_TTL_MS })
+      cache.set(clientId, result.config)
     } else if (result.status === 'absent') {
-      cache.set(clientId, { config: EMPTY_CONFIG, expiresAt: now + ABSENT_TTL_MS })
+      cache.set(clientId, EMPTY_CONFIG, ABSENT_TTL_MS)
     }
 
     return result

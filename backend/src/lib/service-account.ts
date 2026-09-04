@@ -11,6 +11,7 @@
  */
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
+import { TokenCache, type FetchedToken } from '@/lib/cache/token-cache'
 
 export interface ServiceAccountRequest {
   /** Keycloak client id to authenticate as. */
@@ -21,20 +22,19 @@ export interface ServiceAccountRequest {
   scope: string
 }
 
-const tokenCache = new Map<string, { token: string; expiresAt: number }>()
+const tokenCache = new TokenCache()
 
 /**
  * Get a cached service-account access token, fetching a new one when the cached
  * one is missing or within 30 seconds of expiry.
  */
 export async function requestServiceAccountToken(request: ServiceAccountRequest): Promise<string> {
-  const { clientId, clientSecret, scope } = request
-  const cacheKey = `${clientId}\n${scope}`
+  const { clientId, scope } = request
+  return tokenCache.get(`${clientId}\n${scope}`, () => fetchServiceAccountToken(request))
+}
 
-  const cached = tokenCache.get(cacheKey)
-  if (cached && Date.now() < cached.expiresAt - 30_000) {
-    return cached.token
-  }
+async function fetchServiceAccountToken(request: ServiceAccountRequest): Promise<FetchedToken> {
+  const { clientId, clientSecret, scope } = request
 
   const kcBase = config.keycloak.baseUrl
   const realm = config.keycloak.realm
@@ -64,10 +64,6 @@ export async function requestServiceAccountToken(request: ServiceAccountRequest)
     throw new Error(`Service account auth failed: ${err.error_description || resp.statusText}`)
   }
 
-  const data = await resp.json() as { access_token: string; expires_in: number }
-  tokenCache.set(cacheKey, {
-    token: data.access_token,
-    expiresAt: Date.now() + data.expires_in * 1000,
-  })
-  return data.access_token
+  const data = await resp.json() as { access_token: string; expires_in?: number }
+  return { token: data.access_token, expiresInSeconds: data.expires_in }
 }

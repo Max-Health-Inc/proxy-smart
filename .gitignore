@@ -5,7 +5,10 @@
 **/__pycache__
 .vscode
 
+# Build output: scripts/copy-ui-dist.js and the Dockerfile both regenerate these.
 /backend/public/webapp
+/backend/public/docs
+/backend/public/patient-picker
 /backend/public/apps/*
 !/backend/public/apps/index.html
 

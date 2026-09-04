@@ -5,16 +5,12 @@
  * FHIR Proxy Metrics Logger
  *
  * Tracks every proxied FHIR request (status code, latency, resource type,
- * server, client, 429s / errors). Follows the same pub/sub + ring buffer +
- * JSONL persistence pattern used by OAuthMetricsLogger and FhirHealthLogger.
+ * server, client, 429s / errors) over the shared EventJournal.
  */
 
-import { appendFile, mkdir, readFile } from 'fs/promises'
-import { existsSync } from 'fs'
-import { join } from 'path'
 import { logger } from './logger'
-
-// ─── Types ───────────────────────────────────────────────────────
+import { EventJournal } from './events/journal'
+import { average, bucketByHour, countBy, percent } from './events/aggregate'
 
 export interface FhirProxyEvent {
   id: string
@@ -53,78 +49,39 @@ export interface FhirProxyAnalytics {
   }>
 }
 
-// ─── Logger class ────────────────────────────────────────────────
-
 const MAX_MEMORY_EVENTS = 2000
-const ANALYTICS_WINDOW_MS = 24 * 60 * 60 * 1000 // 24h
+/** The dashboard reads second-precision hour keys here. */
+const HOUR_SUFFIX = ':00:00'
 
-class FhirProxyMetricsLogger {
-  private readonly logDir: string
-  private readonly eventsFile: string
-  private events: FhirProxyEvent[] = []
-  private subscribers = new Set<(event: FhirProxyEvent) => void>()
-  private analyticsSubscribers = new Set<(analytics: FhirProxyAnalytics) => void>()
-  private initialized = false
+const isSuccess = (event: FhirProxyEvent): boolean => event.statusCode >= 200 && event.statusCode < 400
+const isError = (event: FhirProxyEvent): boolean => event.statusCode >= 400
+const isRateLimited = (event: FhirProxyEvent): boolean => event.statusCode === 429
 
+class FhirProxyMetricsLogger extends EventJournal<FhirProxyEvent, FhirProxyAnalytics> {
   constructor() {
-    this.logDir = join(process.cwd(), 'logs', 'fhir-proxy-metrics')
-    this.eventsFile = join(this.logDir, 'fhir-proxy-events.jsonl')
+    super({
+      logSubdir: 'fhir-proxy-metrics',
+      logFilename: 'fhir-proxy-events.jsonl',
+      idPrefix: 'fhir-px',
+      channel: logger.fhir,
+      ringBufferSize: MAX_MEMORY_EVENTS,
+    })
   }
-
-  // ─── Lifecycle ──────────────────────────────────────────────
-
-  async initialize(): Promise<void> {
-    if (this.initialized) return
-    if (!existsSync(this.logDir)) {
-      await mkdir(this.logDir, { recursive: true })
-    }
-    await this.loadRecentEvents()
-    this.initialized = true
-    logger.fhir.info('FHIR proxy metrics logger initialized', { eventsLoaded: this.events.length })
-  }
-
-  // ─── Record a proxied request ──────────────────────────────
 
   async logRequest(data: Omit<FhirProxyEvent, 'id' | 'timestamp'>): Promise<void> {
-    const event: FhirProxyEvent = {
-      ...data,
-      id: `fhir-px-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      timestamp: new Date().toISOString(),
-    }
+    const event: FhirProxyEvent = { ...data, ...this.stamp() }
+    await this.record(event)
 
-    // Ring buffer
-    this.events.unshift(event)
-    if (this.events.length > MAX_MEMORY_EVENTS) {
-      this.events.length = MAX_MEMORY_EVENTS
-    }
-
-    // Persist
-    try {
-      await appendFile(this.eventsFile, JSON.stringify(event) + '\n', 'utf8')
-    } catch (e) {
-      logger.fhir.error('Failed to persist FHIR proxy event', { error: String(e) })
-    }
-
-    // Notify real-time subscribers
-    for (const cb of this.subscribers) {
-      try { cb(event) } catch { /* swallow */ }
-    }
-
-    // Push updated analytics
-    const analytics = this.getAnalytics()
-    for (const cb of this.analyticsSubscribers) {
-      try { cb(analytics) } catch { /* swallow */ }
-    }
-
-    // Log 429s and 5xx at warn level
     if (event.statusCode === 429) {
       logger.fhir.warn('FHIR proxy 429 rate limited', { server: event.serverName, path: event.resourcePath })
     } else if (event.statusCode >= 500) {
-      logger.fhir.warn('FHIR proxy server error', { server: event.serverName, status: event.statusCode, path: event.resourcePath })
+      logger.fhir.warn('FHIR proxy server error', {
+        server: event.serverName,
+        status: event.statusCode,
+        path: event.resourcePath,
+      })
     }
   }
-
-  // ─── Query API ────────────────────────────────────────────
 
   getRecentEvents(opts?: {
     limit?: number
@@ -132,118 +89,58 @@ class FhirProxyMetricsLogger {
     statusCode?: number
     since?: Date
   }): FhirProxyEvent[] {
-    let result = [...this.events]
-    if (opts?.serverName) result = result.filter(e => e.serverName === opts.serverName)
-    if (opts?.statusCode) result = result.filter(e => e.statusCode === opts.statusCode)
-    if (opts?.since) {
-      const since = opts.since.getTime()
-      result = result.filter(e => new Date(e.timestamp).getTime() >= since)
-    }
-    if (opts?.limit) result = result.slice(0, opts.limit)
-    return result
+    return this.selectEvents(
+      opts,
+      event => !opts?.serverName || event.serverName === opts.serverName,
+      event => !opts?.statusCode || event.statusCode === opts.statusCode,
+    )
   }
 
+  /** Always fresh: the window moves on even when no request has come in. */
   getAnalytics(): FhirProxyAnalytics {
-    const cutoff = Date.now() - ANALYTICS_WINDOW_MS
-    const recent = this.events.filter(e => new Date(e.timestamp).getTime() >= cutoff)
+    return this.computeAnalytics(this.eventsInWindow())
+  }
 
-    const totalRequests = recent.length
-    const successCount = recent.filter(e => e.statusCode >= 200 && e.statusCode < 400).length
-    const errorCount = recent.filter(e => e.statusCode >= 400).length
-    const rateLimitCount = recent.filter(e => e.statusCode === 429).length
-    const successRate = totalRequests > 0 ? (successCount / totalRequests) * 100 : 0
-    const totalMs = recent.reduce((s, e) => s + e.responseTimeMs, 0)
-    const avgResponseTimeMs = totalRequests > 0 ? Math.round(totalMs / totalRequests) : 0
-
-    // Group by status code
+  protected computeAnalytics(recent: FhirProxyEvent[]): FhirProxyAnalytics {
     const requestsByStatus: Record<number, number> = {}
-    for (const e of recent) {
-      requestsByStatus[e.statusCode] = (requestsByStatus[e.statusCode] || 0) + 1
+    for (const event of recent) {
+      requestsByStatus[event.statusCode] = (requestsByStatus[event.statusCode] ?? 0) + 1
     }
 
-    // Group by server
-    const requestsByServer: Record<string, number> = {}
-    for (const e of recent) {
-      requestsByServer[e.serverName] = (requestsByServer[e.serverName] || 0) + 1
-    }
-
-    // Group by resource type
-    const requestsByResource: Record<string, number> = {}
-    for (const e of recent) {
-      if (e.resourceType) {
-        requestsByResource[e.resourceType] = (requestsByResource[e.resourceType] || 0) + 1
-      }
-    }
-
-    // Recent errors (last 20)
-    const recentErrors = recent.filter(e => e.statusCode >= 400).slice(0, 20)
-
-    // Hourly stats
-    const hourlyMap = new Map<string, { total: number; success: number; errors: number; rateLimited: number; totalMs: number }>()
-    for (const e of recent) {
-      const hour = e.timestamp.slice(0, 13) + ':00:00' // YYYY-MM-DDTHH:00:00
-      let bucket = hourlyMap.get(hour)
-      if (!bucket) { bucket = { total: 0, success: 0, errors: 0, rateLimited: 0, totalMs: 0 }; hourlyMap.set(hour, bucket) }
-      bucket.total++
-      bucket.totalMs += e.responseTimeMs
-      if (e.statusCode >= 200 && e.statusCode < 400) bucket.success++
-      if (e.statusCode >= 400) bucket.errors++
-      if (e.statusCode === 429) bucket.rateLimited++
-    }
-
-    const hourlyStats = Array.from(hourlyMap.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([hour, b]) => ({
-        hour,
-        total: b.total,
-        success: b.success,
-        errors: b.errors,
-        rateLimited: b.rateLimited,
-        avgMs: Math.round(b.totalMs / b.total),
-      }))
+    const successCount = recent.filter(isSuccess).length
 
     return {
-      totalRequests,
+      totalRequests: recent.length,
       successCount,
-      errorCount,
-      rateLimitCount,
-      successRate,
-      avgResponseTimeMs,
+      errorCount: recent.filter(isError).length,
+      rateLimitCount: recent.filter(isRateLimited).length,
+      successRate: percent(successCount, recent.length),
+      avgResponseTimeMs: average(recent.map(event => event.responseTimeMs), { round: true }),
       requestsByStatus,
-      requestsByServer,
-      requestsByResource,
-      recentErrors,
-      hourlyStats,
+      requestsByServer: countBy(recent, event => event.serverName),
+      requestsByResource: countBy(recent, event => event.resourceType),
+      recentErrors: recent.filter(isError).slice(0, 20),
+      hourlyStats: bucketByHour(
+        recent,
+        () => ({ total: 0, success: 0, errors: 0, rateLimited: 0, totalMs: 0 }),
+        (bucket, event) => {
+          bucket.total++
+          bucket.totalMs += event.responseTimeMs
+          if (isSuccess(event)) bucket.success++
+          if (isError(event)) bucket.errors++
+          if (isRateLimited(event)) bucket.rateLimited++
+        },
+        HOUR_SUFFIX,
+      ).map(({ hour, total, success, errors, rateLimited, totalMs }) => ({
+        hour,
+        total,
+        success,
+        errors,
+        rateLimited,
+        avgMs: Math.round(totalMs / total),
+      })),
     }
-  }
-
-  // ─── Pub/Sub ──────────────────────────────────────────────
-
-  subscribeToEvents(cb: (event: FhirProxyEvent) => void): () => void {
-    this.subscribers.add(cb)
-    return () => { this.subscribers.delete(cb) }
-  }
-
-  subscribeToAnalytics(cb: (analytics: FhirProxyAnalytics) => void): () => void {
-    this.analyticsSubscribers.add(cb)
-    return () => { this.analyticsSubscribers.delete(cb) }
-  }
-
-  // ─── Load persisted data ───────────────────────────────────
-
-  private async loadRecentEvents(): Promise<void> {
-    if (!existsSync(this.eventsFile)) return
-    try {
-      const raw = await readFile(this.eventsFile, 'utf8')
-      const lines = raw.trim().split('\n').filter(Boolean)
-      const start = Math.max(0, lines.length - MAX_MEMORY_EVENTS)
-      for (let i = start; i < lines.length; i++) {
-        try { this.events.push(JSON.parse(lines[i])) } catch { /* skip corrupt */ }
-      }
-      this.events.reverse() // most recent first
-    } catch { /* file may not exist yet */ }
   }
 }
 
-// Singleton
 export const fhirProxyMetricsLogger = new FhirProxyMetricsLogger()

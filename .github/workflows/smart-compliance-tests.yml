@@ -51,17 +51,17 @@ on:
         description: 'Overall test status'
         value: ${{ jobs.smart-compliance-test.outputs.status }}
   
-  # Feature branches - test with local CI stack
-  # NOTE: 'test' and 'main' are intentionally excluded here because their
-  # release workflows (release-beta.yml, release-production.yml) call
-  # testing-strategy.yml → smart-compliance-tests.yml AFTER deployment.
-  # Running compliance tests directly on push would race against deployment
-  # and hit a 503 because the new code isn't deployed yet.
-  # NOTE: 'develop' is excluded because alpha is a dev-only release with no live deployment.
+  # NO branch push trigger. Every branch that matters is already covered
+  # elsewhere, and a full Inferno stack per dev/* push bought nothing:
+  #   dev/*        — reviewed via its auto-PR; run it by hand when a change
+  #                  touches the launch, token or scope paths
+  #   develop      — alpha is a dev-only release with no live deployment
+  #   test, main   — release-beta.yml / release-production.yml call
+  #                  testing-strategy.yml → this workflow AFTER deployment.
+  #                  On push they would race the deploy and 503 on code that
+  #                  is not live yet.
+  # Tags, the weekly schedule, workflow_call and workflow_dispatch remain.
   push:
-    branches:
-      - 'dev/*'
-      - 'develop/*'
     tags:
       - 'v*'
     paths:

@@ -11,11 +11,11 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 const backendPublicPath = path.join(projectRoot, 'backend', 'public');
 
-// App definitions: [sourceDistDir, mountPath]
+// Sources mirror the Dockerfile's COPY stages; keep the two in step.
 const apps = [
-  { name: 'Admin UI',        src: path.join(projectRoot, 'frontend', 'ui', 'dist'),              dest: path.join(backendPublicPath, 'webapp') },
-  { name: 'Patient Picker',  src: path.join(projectRoot, 'frontend', 'patient-picker', 'dist'),  dest: path.join(backendPublicPath, 'patient-picker') },
-  { name: 'Docs',            src: path.join(projectRoot, 'docs', '.vitepress', 'dist'),          dest: path.join(backendPublicPath, 'docs') },
+  { name: 'Admin UI',        src: path.join(projectRoot, 'webapp-dist'),                        dest: path.join(backendPublicPath, 'webapp') },
+  { name: 'Patient Picker',  src: path.join(projectRoot, 'packages', 'patient-picker', 'dist'), dest: path.join(backendPublicPath, 'patient-picker') },
+  { name: 'Docs',            src: path.join(projectRoot, 'docs', '.vitepress', 'dist'),         dest: path.join(backendPublicPath, 'docs') },
 ];
 
 console.log('🔄 Copying app dists to backend public directory...');

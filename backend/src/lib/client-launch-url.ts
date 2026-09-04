@@ -19,14 +19,9 @@ import KcAdminClient from '@keycloak/keycloak-admin-client'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
 import { getAttr } from '@/lib/smart-client-enrichment'
+import { TtlCache } from '@/lib/cache/ttl-cache'
 
-interface CacheEntry {
-  launchUrl: string | null
-  at: number
-}
-
-const cache = new Map<string, CacheEntry>()
-const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+const launchUrls = new TtlCache<string | null>({ ttlMs: 5 * 60 * 1000 })
 
 /**
  * The registered `launch_url` for the given OAuth client id, or `null` when the
@@ -34,31 +29,27 @@ const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
  */
 export async function resolveClientLaunchUrl(clientId: string): Promise<string | null> {
   if (!clientId) return null
+  return launchUrls.getOrLoad(clientId, () => readLaunchUrl(clientId))
+}
 
-  const hit = cache.get(clientId)
-  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.launchUrl
-
-  let launchUrl: string | null = null
+async function readLaunchUrl(clientId: string): Promise<string | null> {
   try {
     const { adminClientId, adminClientSecret, baseUrl, realm } = config.keycloak
-    if (adminClientId && adminClientSecret && baseUrl && realm) {
-      const admin = new KcAdminClient({ baseUrl, realmName: realm })
-      await admin.auth({
-        grantType: 'client_credentials',
-        clientId: adminClientId,
-        clientSecret: adminClientSecret,
-      })
-      const clients = await admin.clients.find({ clientId, max: 1 })
-      launchUrl = getAttr(clients[0]?.attributes, 'launch_url') ?? null
-    }
+    if (!adminClientId || !adminClientSecret || !baseUrl || !realm) return null
+
+    const admin = new KcAdminClient({ baseUrl, realmName: realm })
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: adminClientId,
+      clientSecret: adminClientSecret,
+    })
+    const clients = await admin.clients.find({ clientId, max: 1 })
+    return getAttr(clients[0]?.attributes, 'launch_url') ?? null
   } catch (error) {
     logger.auth.warn('Failed to resolve client launch_url from Keycloak', {
       clientId,
       error: error instanceof Error ? error.message : String(error),
     })
-    launchUrl = null
+    return null
   }
-
-  cache.set(clientId, { launchUrl, at: Date.now() })
-  return launchUrl
 }
