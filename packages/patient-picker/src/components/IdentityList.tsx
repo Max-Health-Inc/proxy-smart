@@ -3,13 +3,7 @@ import { Button, Loader } from "@proxy-smart/shared-ui"
 import { Stethoscope, HeartPulse, Users, type LucideIcon } from "lucide-react"
 import { fetchIdentityOptions, type Identity } from "@/lib/api-client"
 
-/**
- * The identities the signed-in human may act as for this launch.
- *
- * Labelled by ROLE and never by name: every option here is the same person, so their name would
- * be the one thing printed identically on all of them. What differs is which record the app is
- * about to be given, and that is what the label says.
- */
+/** Labelled by ROLE, never by name: every option is the same person. */
 const ROLES: Record<string, { title: string; blurb: string; icon: LucideIcon }> = {
   Patient: {
     title: "Your own health record",

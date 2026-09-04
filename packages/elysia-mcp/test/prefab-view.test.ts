@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect } from 'bun:test'
+import { mountRoutes } from './helpers/mount'
 import { PrefabApp, Column, Heading } from '@maxhealth.tech/prefab'
 import { defaultView, labelFromToolName, prefabView, titleFromToolName, toolForm, uiToolMeta } from '../src/prefab-view'
 import { Type } from '@sinclair/typebox'
@@ -107,7 +108,7 @@ describe('prefabView', () => {
 describe('prefabView through executeTool', () => {
   it('puts the view in structuredContent and the data in the text block', async () => {
     const roles: ToolMetadata = { path: '/admin/roles', method: 'GET', handler: () => ROWS, readOnly: true }
-    const result = await executeTool('list_admin_roles', roles, {}, undefined, undefined, { view: prefabView() })
+    const result = await executeTool('list_admin_roles', roles, {}, undefined, mountRoutes(roles), { view: prefabView() })
 
     expect(Object.keys(result.structuredContent as Record<string, unknown>)).toContain('$prefab')
     expect(JSON.parse(result.content[0]?.text ?? '')).toEqual(ROWS)
@@ -115,7 +116,7 @@ describe('prefabView through executeTool', () => {
 
   it('leaves a scalar payload as it was', async () => {
     const ping: ToolMetadata = { path: '/admin/ping', method: 'GET', handler: () => 'pong', readOnly: true }
-    const result = await executeTool('get_admin_ping', ping, {}, undefined, undefined, { view: prefabView() })
+    const result = await executeTool('get_admin_ping', ping, {}, undefined, mountRoutes(ping), { view: prefabView() })
     expect(result.structuredContent).toBeUndefined()
     expect(result.content[0]?.text).toBe('pong')
   })
@@ -133,7 +134,7 @@ describe('prefabView through executeResourceResult', () => {
       pathParams: [],
     }
 
-    const result = await executeResourceResult(resource, {}, undefined, undefined, {
+    const result = await executeResourceResult(resource, {}, undefined, mountRoutes(resource), {
       textFormat: 'auto',
       view: prefabView(),
     })
@@ -150,7 +151,7 @@ describe('prefabView through executeResourceResult', () => {
       handler: () => [{ clientId: 'growth-chart' }],
       pathParams: [],
     }
-    const result = await executeResourceResult(resource, {}, undefined, undefined, { view: prefabView() })
+    const result = await executeResourceResult(resource, {}, undefined, mountRoutes(resource), { view: prefabView() })
     expect(JSON.stringify(result.structuredContent)).toContain('Admin smart apps')
   })
 })

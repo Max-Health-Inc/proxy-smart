@@ -67,15 +67,9 @@ function createVulnApp() {
     )
 }
 
-/**
- * The executor needs a way to reach the real pipeline. We pass the app through
- * the dispatch channel the package exposes (`__app` context decorator), which
- * the secure executor uses to call `app.handle()`. Until the secure path
- * exists, the executor ignores it and uses the synthetic context (RED).
- */
-function dispatchOptions(app: Elysia) {
-  return { __app: app }
-}
+// The app is now a required argument to the executor, so these tests simply
+// hand it over. It used to travel inside an optional decorator bag, and omitting
+// it selected the synthetic path these tests were written to condemn.
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -91,7 +85,7 @@ describe('Middleware bypass — response-schema leakage (b)', () => {
       meta,
       { name: 'whatever' },
       undefined,
-      dispatchOptions(app),
+      app,
     )
 
     expect(result.isError).toBeUndefined()
@@ -107,7 +101,7 @@ describe('Middleware bypass — response-schema leakage (b)', () => {
     const meta = resources.get('admin_leak_resource')!
     expect(meta).toBeDefined()
 
-    const raw = await executeResource(meta, {}, undefined, dispatchOptions(app))
+    const raw = await executeResource(meta, {}, undefined, app)
     const parsed = JSON.parse(raw)
     expect(parsed.id).toBe('res-1')
     expect(parsed.secret).toBeUndefined()
@@ -126,7 +120,7 @@ describe('Middleware bypass — beforeHandle/guard bypass (c)', () => {
       meta,
       { name: 'whatever' },
       undefined,
-      dispatchOptions(app),
+      app,
     )
 
     // SECURE expectation: guard short-circuits → error, handler never ran.

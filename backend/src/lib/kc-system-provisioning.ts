@@ -18,6 +18,7 @@ import { logger } from './logger'
 import { RESOURCE_INDICATORS_SCOPE } from './smart-client-enrichment'
 import { ensureMappersOnScope } from './smart-scope-mappers'
 import { getFhirResourceUrls } from './fhir-server-store'
+import { resolveClientHomeUrl } from '@proxy-smart/auth'
 
 /** Keycloak client attribute: let this client introspect tokens it isn't in the aud of. */
 const ALLOW_INTROSPECTION_WITHOUT_AUDIENCE = 'allow.token.introspection.without.audience.check'
@@ -354,6 +355,48 @@ async function attachResourceIndicatorsToExistingClients(
  * Returns the resulting resource clients for confirmation. Idempotent; each step
  * is individually non-fatal.
  */
+/**
+ * Backfill `baseUrl` on SMART clients that predate it being set at registration.
+ *
+ * Keycloak renders "Back to Application" on its error and page-expired screens
+ * from the client's baseUrl. Clients registered before resolveClientHomeUrl was
+ * wired in have none, so every failed login on them offered a link to the theme's
+ * PROXY_PUBLIC_URL — this proxy's API host — instead of the app the launch came
+ * from. New clients get it at registration; this fixes the ones already there.
+ *
+ * Only fills a blank. An operator who set a baseUrl by hand in the Keycloak admin
+ * console meant it, and a redirect URI is a worse source of truth than that.
+ */
+export async function reconcileClientHomeUrls(
+  admin: KcAdminClient,
+): Promise<{ clientId: string; baseUrl: string }[]> {
+  const clients = await admin.clients.find()
+  const updated: { clientId: string; baseUrl: string }[] = []
+
+  for (const client of clients) {
+    if (!client.id || !client.clientId) continue
+    if (client.attributes?.['smart_app'] !== 'true') continue
+    if (client.baseUrl && client.baseUrl.trim() !== '') continue
+
+    // Same inputs, same precedence as registration: a declared client_uri wins
+    // over a redirect origin. Dynamic registration persists it as
+    // `smart.client_uri`, so leaving it out here would have resolved a worse
+    // answer than the client actually gave us.
+    const baseUrl = resolveClientHomeUrl({
+      clientUri: client.attributes?.['smart.client_uri'],
+      redirectUris: client.redirectUris,
+      proxyBaseUrl: config.baseUrl,
+    })
+    if (!baseUrl) continue
+
+    await admin.clients.update({ id: client.id }, { baseUrl })
+    updated.push({ clientId: client.clientId, baseUrl })
+    logger.admin.info('Backfilled client baseUrl', { clientId: client.clientId, baseUrl })
+  }
+
+  return updated
+}
+
 export async function reconcileResourceIndicators(
   admin: KcAdminClient,
 ): Promise<{ clientId: string; resourceUrl?: string }[]> {

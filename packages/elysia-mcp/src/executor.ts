@@ -4,20 +4,18 @@
 /**
  * @proxy-smart/elysia-mcp - Tool & Resource Execution
  *
- * Two execution strategies:
+ * Execution dispatches the tool/resource through the app's own HTTP pipeline:
+ * a `Request` is reconstructed from the route metadata + args + token and handed
+ * to `app.handle()`. That runs the FULL Elysia lifecycle — `beforeHandle` guards,
+ * response-schema coercion, and `onAfterResponse` hooks such as audit logging.
+ * Pass the ROOT app so global plugins and route prefixes resolve.
  *
- *  1. PIPELINE DISPATCH (secure, preferred) — when an Elysia app reference is
- *     supplied via the `__app` context decorator, the tool/resource is executed
- *     by reconstructing an HTTP `Request` from the route metadata + args + token
- *     and dispatching it through `app.handle()`. This runs the FULL Elysia
- *     lifecycle: `beforeHandle`/guards, response-schema coercion, and
- *     `onAfterResponse` hooks (e.g. audit logging). Use the ROOT app so global
- *     plugins and route prefixes resolve.
- *
- *  2. SYNTHETIC CONTEXT (legacy fallback) — when no app reference is supplied,
- *     a hand-built Elysia-like context is passed directly to the handler. This
- *     BYPASSES the pipeline (no guards / response-schema / lifecycle hooks) and
- *     is retained only for environments that cannot dispatch through an app.
+ * There is deliberately NO synthetic-context fallback. Calling the handler
+ * directly is what commit 3bc8d07ac was fixing: it skipped guards, response
+ * schemas and audit logging, and it stayed reachable afterwards because the app
+ * arrived through an OPTIONAL bag of decorators, so forgetting it silently
+ * selected the unguarded path. The app is a required argument now, which is why
+ * that class of mistake no longer type-checks.
  */
 
 import { Value } from '@sinclair/typebox/value'
@@ -25,9 +23,6 @@ import type { ToolMetadata, ResourceMetadata } from './types'
 import { getMergedInputSchema } from './typebox-schema'
 import { pathToToolName } from './introspect'
 import { chooseToolText, type ToolTextFormat } from './text-format'
-
-/** Context-decorator key carrying the Elysia app used for pipeline dispatch. */
-export const DISPATCH_APP_KEY = '__app'
 
 /** Per-call execution options. */
 export interface ExecuteOptions {
@@ -92,8 +87,8 @@ export async function executeTool(
   toolName: string,
   meta: ToolMetadata,
   args: Record<string, unknown>,
-  authToken?: string,
-  contextDecorators?: Record<string, unknown>,
+  authToken: string | undefined,
+  app: DispatchableApp,
   options?: ExecuteOptions,
 ): Promise<{
   content: { type: 'text'; text: string }[]
@@ -114,32 +109,8 @@ export async function executeTool(
       }
     }
 
-    const app = getDispatchApp(contextDecorators)
-
-    // ── Pipeline dispatch (secure) ───────────────────────────────────────
-    if (app) {
-      const { status, text } = await dispatchThroughPipeline(app, meta.path, meta.method, args, authToken)
-      if (status >= 400) {
-        return { content: [{ type: 'text', text }], isError: true }
-      }
-      return successResult(text, options, { toolName, meta })
-    }
-
-    // ── Synthetic context (legacy fallback) ──────────────────────────────
-    if (typeof meta.handler !== 'function') {
-      return {
-        content: [{ type: 'text', text: `Tool ${toolName} has no callable handler.` }],
-        isError: true,
-      }
-    }
-
-    const elysiaContext = buildSyntheticContext(meta.path, meta.method, args, authToken, contextDecorators)
-    const result = await (meta.handler as (ctx: unknown) => unknown)(elysiaContext)
-    const responseStatus = typeof elysiaContext.set.status === 'number' ? elysiaContext.set.status : 200
-
-    const text = serializeResult(result, responseStatus)
-
-    if (responseStatus >= 400) {
+    const { status, text } = await dispatchThroughPipeline(app, meta.path, meta.method, args, authToken)
+    if (status >= 400) {
       return { content: [{ type: 'text', text }], isError: true }
     }
     return successResult(text, options, { toolName, meta })
@@ -170,11 +141,11 @@ export interface ResourceResult {
 export async function executeResource(
   meta: ResourceMetadata,
   pathParams: Record<string, string>,
-  authToken?: string,
-  contextDecorators?: Record<string, unknown>,
+  authToken: string | undefined,
+  app: DispatchableApp,
   options?: ExecuteOptions,
 ): Promise<string> {
-  const { text } = await executeResourceResult(meta, pathParams, authToken, contextDecorators, options)
+  const { text } = await executeResourceResult(meta, pathParams, authToken, app, options)
   return text
 }
 
@@ -191,11 +162,11 @@ export async function executeResource(
 export async function executeResourceResult(
   meta: ResourceMetadata,
   pathParams: Record<string, string>,
-  authToken?: string,
-  contextDecorators?: Record<string, unknown>,
+  authToken: string | undefined,
+  app: DispatchableApp,
   options?: ExecuteOptions,
 ): Promise<ResourceResult> {
-  const serialized = await readResource(meta, pathParams, authToken, contextDecorators)
+  const serialized = await readResource(meta, pathParams, authToken, app)
   const view = applyView(serialized, options?.view, {
     toolName: pathToToolName(meta.path, 'GET'),
     meta,
@@ -208,41 +179,14 @@ export async function executeResourceResult(
 async function readResource(
   meta: ResourceMetadata,
   pathParams: Record<string, string>,
-  authToken?: string,
-  contextDecorators?: Record<string, unknown>,
+  authToken: string | undefined,
+  app: DispatchableApp,
 ): Promise<string> {
   try {
-    const app = getDispatchApp(contextDecorators)
-
-    // ── Pipeline dispatch (secure) ───────────────────────────────────────
-    if (app) {
-      // pathParams are pre-resolved by the caller; feed them as args so the
-      // shared URL builder interpolates them into the concrete path.
-      const { text } = await dispatchThroughPipeline(app, meta.path, 'GET', pathParams, authToken)
-      return text
-    }
-
-    // ── Synthetic context (legacy fallback) ──────────────────────────────
-    if (typeof meta.handler !== 'function') {
-      return JSON.stringify({ error: 'Resource has no callable handler' })
-    }
-
-    const elysiaContext = {
-      body: {},
-      headers: buildHeaders(authToken),
-      set: { status: 200, headers: {} as Record<string, string> },
-      params: pathParams,
-      query: {},
-      request: new Request(`http://localhost${meta.path}`, { method: 'GET', headers: buildAuthHeader(authToken) }),
-      ...stripDispatchApp(contextDecorators),
-    }
-
-    const result = await (meta.handler as (ctx: unknown) => unknown)(elysiaContext)
-
-    if (result === undefined || result === null) {
-      return JSON.stringify({ success: true })
-    }
-    return typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
+    // pathParams are pre-resolved by the caller; feed them as args so the
+    // shared URL builder interpolates them into the concrete path.
+    const { text } = await dispatchThroughPipeline(app, meta.path, 'GET', pathParams, authToken)
+    return text
   } catch (err) {
     return JSON.stringify({ error: `Resource read failed: ${err instanceof Error ? err.message : String(err)}` })
   }
@@ -311,59 +255,6 @@ function buildUrl(
   return { url, rest }
 }
 
-/** Pull the dispatch app out of the context decorators, if present. */
-function getDispatchApp(contextDecorators?: Record<string, unknown>): DispatchableApp | null {
-  const candidate = contextDecorators?.[DISPATCH_APP_KEY]
-  if (candidate && typeof (candidate as { handle?: unknown }).handle === 'function') {
-    return candidate as DispatchableApp
-  }
-  return null
-}
-
-// ── Synthetic-context helpers ──────────────────────────────────────────────────
-
-/** Copy of the decorators with the dispatch-app key removed (never leak it to handlers). */
-function stripDispatchApp(contextDecorators?: Record<string, unknown>): Record<string, unknown> {
-  const decorators = { ...contextDecorators }
-  delete decorators[DISPATCH_APP_KEY]
-  return decorators
-}
-
-/** Build a synthetic Elysia-like context for the legacy fallback path. */
-function buildSyntheticContext(
-  path: string,
-  method: string,
-  args: Record<string, unknown>,
-  authToken: string | undefined,
-  contextDecorators: Record<string, unknown> | undefined,
-) {
-  const pathParams = extractPathParams(path, args)
-  const cleanArgs = { ...args }
-  for (const key of Object.keys(pathParams)) delete cleanArgs[key]
-
-  const isGetRoute = method.toUpperCase() === 'GET'
-
-  return {
-    body: isGetRoute ? {} : cleanArgs,
-    headers: buildHeaders(authToken),
-    set: { status: 200, headers: {} as Record<string, string> },
-    params: pathParams,
-    query: isGetRoute ? cleanArgs : {},
-    request: new Request(`http://localhost${path}`, {
-      method,
-      headers: { ...buildAuthHeader(authToken), 'Content-Type': 'application/json' },
-    }),
-    ...stripDispatchApp(contextDecorators),
-  }
-}
-
-/** Serialize a synthetic-handler result to MCP text content. */
-function serializeResult(result: unknown, status: number): string {
-  if (result === undefined || result === null) {
-    return JSON.stringify({ success: true, status })
-  }
-  return typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
-}
 
 /**
  * Build a successful tool result. Always includes a text content block, which
@@ -454,14 +345,6 @@ function toStructuredContent(text: string): StructuredContent | undefined {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Lowercased header map (Elysia handler `ctx.headers` convention). */
-function buildHeaders(authToken?: string): Record<string, string> {
-  return {
-    ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
-    'content-type': 'application/json',
-  }
-}
-
 /** Request `Authorization` header (capitalized, for the WHATWG Request). */
 function buildAuthHeader(authToken?: string): Record<string, string> {
   return authToken ? { Authorization: `Bearer ${authToken}` } : {}
@@ -485,12 +368,3 @@ function extractPathParams(path: string, args: Record<string, unknown>): Record<
   return params
 }
 
-/**
- * JSON.stringify replacer that serializes Error objects (non-enumerable props).
- */
-function serializeErrors(_key: string, value: unknown): unknown {
-  if (value instanceof Error) {
-    return { name: value.name, message: value.message }
-  }
-  return value
-}

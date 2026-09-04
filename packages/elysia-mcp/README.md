@@ -134,11 +134,11 @@ These are advisory hints a client may use to shape its UX, such as confirming be
 
 ## Execution
 
-`executeTool(toolName, meta, args, authToken?, contextDecorators?)` validates `args` against the merged schema and then runs the route one of two ways.
+`executeTool(toolName, meta, args, authToken, app, options?)` validates `args` against the merged schema and then dispatches the route through `app.handle()`. The call is turned back into an HTTP `Request`, so the full Elysia lifecycle runs: `beforeHandle` guards, response-schema coercion, and `onAfterResponse` hooks such as audit logging. Pass the **root** app so global plugins and route prefixes resolve.
 
-**Pipeline dispatch** is used when an Elysia app is supplied through the `DISPATCH_APP_KEY` (`__app`) context decorator. The call is turned back into an HTTP `Request` and sent through `app.handle()`, which runs the full Elysia lifecycle: `beforeHandle` guards, response-schema coercion, and `onAfterResponse` hooks such as audit logging. Pass the **root** app so global plugins and route prefixes resolve.
+The app is a required argument, and there is no second way to run a route. An earlier version accepted it as one key inside an optional bag of context decorators and fell back to calling the handler directly through a hand-built context — which skipped guards, response schemas and audit logging. Because the safe path was the opt-in one, omitting the app silently selected the unguarded one. Requiring it means that mistake no longer compiles.
 
-**Synthetic context** is the fallback when no app reference is present. A hand-built Elysia-like context goes straight to the handler, which bypasses guards, response schemas, and lifecycle hooks. It exists only for environments that cannot dispatch through an app, and it is not the path to use when authorization lives in a guard.
+Handler context comes from the app itself: `decorate()` what a route needs, as you would for any Elysia route. The executor injects nothing.
 
 `executeResource` follows the same shape for resource reads.
 

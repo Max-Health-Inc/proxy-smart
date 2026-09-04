@@ -12,7 +12,6 @@ export default function App() {
   useScene({ defaultScene: "perspective-grid" })
   const params = useMemo(() => getPickerParams(), [])
   const pickerError = useMemo(() => getPickerError(), [])
-  // Which of the two things this launch is choosing. Set by the backend redirect.
   const identityMode = useMemo(() => isIdentityMode(), [])
   const [selected, setSelected] = useState<Patient | null>(null)
   const [identity, setIdentity] = useState<Identity | null>(null)

@@ -1,7 +1,7 @@
 {
   "name": "proxy-smart-backend",
   "displayName": "Proxy Smart Backend",
-  "version": "0.4.10-RELEASE.202608302020.90539381e",
+  "version": "0.4.11-beta.202609032203.fa983a0b0",
   "type": "module",
   "scripts": {
     "test": "bun test --isolate",
@@ -28,7 +28,6 @@
     "@maxhealth.tech/mcp-http": "^0.5.0",
     "@maxhealth.tech/prefab": "^0.3.13",
     "@modelcontextprotocol/server": "^2.0.0",
-    "@opendataloader/pdf": "^2.5.5",
     "@proxy-smart/app-store": "workspace:*",
     "@proxy-smart/auth": "workspace:*",
     "@sinclair/typebox": "^0.34.52",
@@ -62,8 +61,5 @@
     "typescript": "6.0.3",
     "typescript-eslint": "^8.68.0"
   },
-  "module": "src/index.js",
-  "optionalDependencies": {
-    "@max-health-inc/connect-engine": "^0.2.1"
-  }
+  "module": "src/index.js"
 }
