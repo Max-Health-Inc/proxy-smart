@@ -21,6 +21,7 @@ import {
   type BaseEvent,
   type KeycloakEvent,
 } from '../../src/lib/base-events-logger'
+import { logger } from '../../src/lib/logger'
 
 interface TestEvent extends BaseEvent {
   clientId?: string
@@ -38,7 +39,7 @@ class HarnessLogger extends BaseEventsLogger<TestEvent, TestAnalytics> {
       logSubdir: subdir,
       logFilename: 'events.jsonl',
       eventTypes: ['LOGIN', 'LOGIN_ERROR'],
-      logChannel: 'auth',
+      channel: logger.auth,
       idPrefix: 'test',
       mapEvent: (kc: KeycloakEvent): TestEvent => ({
         id: kc.id ?? 'generated',

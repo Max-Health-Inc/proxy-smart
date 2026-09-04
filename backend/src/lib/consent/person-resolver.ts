@@ -29,18 +29,19 @@ import type {
 import { IAL_LEVELS } from './types'
 import { logger } from '../logger'
 import { getRuntimeIalConfig } from '../runtime-config'
+import { TtlCache } from '../cache/ttl-cache'
 
 // =============================================================================
 // PERSON CACHE
 // =============================================================================
 
-interface PersonCacheEntry {
+/** fetchedAt rides along for the cache stats; expiry is the cache's own. */
+interface CachedPerson {
   person: FhirPerson | null
   fetchedAt: number
-  expiresAt: number
 }
 
-const personCache = new Map<string, PersonCacheEntry>()
+const personCache = new TtlCache<CachedPerson>({ ttlMs: 5 * 60 * 1000 })
 
 /**
  * Generate cache key for Person lookup
@@ -53,19 +54,9 @@ function getPersonCacheKey(serverName: string, personId: string): string {
  * Get Person from cache
  */
 function getCachedPerson(serverName: string, personId: string): FhirPerson | null | undefined {
-  const key = getPersonCacheKey(serverName, personId)
-  const entry = personCache.get(key)
-  
-  if (!entry) {
-    return undefined // Not in cache
-  }
-  
-  if (Date.now() > entry.expiresAt) {
-    personCache.delete(key)
-    return undefined // Expired
-  }
-  
-  return entry.person // null means "not found" was cached
+  const entry = personCache.get(getPersonCacheKey(serverName, personId))
+  // undefined is a miss; a cached null is "not found", which is worth caching.
+  return entry ? entry.person : undefined
 }
 
 /**
@@ -73,14 +64,8 @@ function getCachedPerson(serverName: string, personId: string): FhirPerson | nul
  */
 function setCachedPerson(serverName: string, personId: string, person: FhirPerson | null, ttlMs: number): void {
   const key = getPersonCacheKey(serverName, personId)
-  const now = Date.now()
-  
-  personCache.set(key, {
-    person,
-    fetchedAt: now,
-    expiresAt: now + ttlMs
-  })
-  
+  personCache.set(key, { person, fetchedAt: Date.now() }, ttlMs)
+
   logger.consent.debug('Cached person', {
     key,
     found: person !== null,
@@ -101,13 +86,13 @@ export function clearPersonCache(): void {
  */
 export function getPersonCacheStats(): { entries: number; oldestEntry: number | null } {
   let oldestEntry: number | null = null
-  
+
   for (const entry of personCache.values()) {
     if (oldestEntry === null || entry.fetchedAt < oldestEntry) {
       oldestEntry = entry.fetchedAt
     }
   }
-  
+
   return {
     entries: personCache.size,
     oldestEntry

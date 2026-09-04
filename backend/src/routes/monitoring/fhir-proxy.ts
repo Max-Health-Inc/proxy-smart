@@ -22,14 +22,14 @@ export const fhirProxyMonitoringRoutes = createMonitoringRoutes({
     {
       path: '/events/stream',
       connectionMessage: 'Connected to FHIR proxy metrics stream',
-      subscribe: (emit) => fhirProxyMetricsLogger.subscribeToEvents(emit),
+      subscribe: (emit) => fhirProxyMetricsLogger.subscribe(emit),
       summary: 'FHIR Proxy Event Stream',
       description: 'SSE stream of real-time FHIR proxy request events',
     },
     {
       path: '/analytics/stream',
       initial: () => fhirProxyMetricsLogger.getAnalytics(),
-      subscribe: (emit) => fhirProxyMetricsLogger.subscribeToAnalytics(emit),
+      subscribe: (emit) => fhirProxyMetricsLogger.subscribeAnalytics(emit),
       summary: 'FHIR Proxy Analytics Stream',
       description: 'SSE stream of real-time FHIR proxy analytics, updated on every request',
     },

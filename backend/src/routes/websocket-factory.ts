@@ -18,6 +18,7 @@
 import { Elysia } from 'elysia'
 import { validateToken } from '../lib/auth'
 import { logger } from '../lib/logger'
+import type { MonitoringLogger } from '../lib/events/journal'
 import {
   WebSocketInfoResponse,
   type WebSocketClient,
@@ -25,14 +26,6 @@ import {
   type ControlMessageType,
 } from '../schemas/websocket'
 
-// ─── Logger interface that all metrics loggers satisfy ────────────
-
-export interface MonitoringLogger<TEvent, TAnalytics> {
-  subscribeToEvents(cb: (event: TEvent) => void): () => void
-  subscribeToAnalytics(cb: (analytics: TAnalytics) => void): () => void
-  getRecentEvents(opts?: { limit?: number }): TEvent[]
-  getAnalytics(): TAnalytics | null
-}
 
 // ─── Factory configuration ───────────────────────────────────────
 
@@ -219,7 +212,7 @@ export function createMonitoringWebSocket<TEvent, TAnalytics>(
     const filteredEvents = config.applyEventFilters(recentEvents, client.filters)
     client.ws.send(JSON.stringify({ type: 'events_data', data: { events: filteredEvents } }))
 
-    config.metricsLogger.subscribeToEvents((event) => {
+    config.metricsLogger.subscribe((event) => {
       if (client.subscriptions.has('events') && client.authenticated) {
         const filtered = config.applyEventFilters([event], client.filters)
         if (filtered.length > 0) {
@@ -233,7 +226,7 @@ export function createMonitoringWebSocket<TEvent, TAnalytics>(
     const analytics = config.metricsLogger.getAnalytics()
     client.ws.send(JSON.stringify({ type: 'analytics_data', data: analytics }))
 
-    config.metricsLogger.subscribeToAnalytics((analytics) => {
+    config.metricsLogger.subscribeAnalytics((analytics) => {
       if (client.subscriptions.has('analytics') && client.authenticated) {
         client.ws.send(JSON.stringify({ type: 'analytics_update', data: analytics }))
       }
