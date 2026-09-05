@@ -9,6 +9,7 @@
  */
 
 import { BaseEventsLogger, mapBaseKeycloakEvent, type KeycloakEvent } from './base-events-logger'
+import { logger } from './logger'
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -57,19 +58,16 @@ class EmailEventsLogger extends BaseEventsLogger<EmailEvent, EmailAnalytics> {
       logSubdir: 'email-events',
       logFilename: 'email-events.jsonl',
       eventTypes: EMAIL_EVENT_TYPES,
-      logChannel: 'email',
+      channel: logger.email,
       idPrefix: 'email',
       mapEvent: mapEmailEvent,
     })
   }
 
   protected computeAnalytics(recent: EmailEvent[]): EmailAnalytics {
-    const base = this.computeBaseAnalytics(recent)
-    const recentErrors = recent.filter(e => !e.success).slice(0, 20)
-
     return {
-      ...base,
-      recentErrors,
+      ...this.computeBaseAnalytics(recent),
+      recentErrors: recent.filter(event => !event.success).slice(0, 20),
     }
   }
 }

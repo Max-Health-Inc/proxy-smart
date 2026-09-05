@@ -111,14 +111,14 @@ export const oauthMonitoringRoutes = createMonitoringRoutes({
     {
       path: '/events/stream',
       connectionMessage: 'Connected to OAuth events stream',
-      subscribe: (emit) => oauthMetricsLogger.subscribeToEvents(emit),
+      subscribe: (emit) => oauthMetricsLogger.subscribe(emit),
       summary: 'OAuth Events Stream',
       description: 'SSE stream of real-time OAuth events',
     },
     {
       path: '/analytics/stream',
       initial: () => oauthMetricsLogger.getAnalytics(),
-      subscribe: (emit) => oauthMetricsLogger.subscribeToAnalytics(emit),
+      subscribe: (emit) => oauthMetricsLogger.subscribeAnalytics(emit),
       summary: 'OAuth Analytics Stream',
       description: 'SSE stream of real-time OAuth analytics updates',
     },

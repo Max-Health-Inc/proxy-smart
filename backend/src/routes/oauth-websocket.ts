@@ -11,7 +11,8 @@
 import { oauthMetricsLogger, type OAuthFlowEvent } from '../lib/oauth-metrics-logger'
 import type { OAuthAnalytics } from '../lib/oauth-metrics-logger'
 import { logger } from '../lib/logger'
-import { createMonitoringWebSocket, type MonitoringLogger } from './websocket-factory'
+import { createMonitoringWebSocket } from './websocket-factory'
+import type { MonitoringLogger } from '../lib/events/journal'
 import type { WebSocketClient } from '../schemas/websocket'
 import type { ControlMessageType } from '../schemas/websocket'
 

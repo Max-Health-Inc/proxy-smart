@@ -1,9 +1,9 @@
 {
   "name": "@proxy-smart/auth",
-  "version": "0.4.2",
+  "version": "0.4.12-alpha.202609041839.6bf934e92",
   "private": true,
   "type": "module",
-  "description": "SMART on FHIR STU 2.2.0 server-side authorization proxy \u2014 launch context, session management, token enrichment. Framework-agnostic, IdP-pluggable.",
+  "description": "SMART on FHIR STU 2.2.0 server-side authorization proxy — launch context, session management, token enrichment. Framework-agnostic, IdP-pluggable.",
   "repository": {
     "type": "git",
     "url": "https://github.com/proxy-smart/proxy-smart.git",

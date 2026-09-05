@@ -72,10 +72,12 @@ jobs:
           echo "BABELFHIR_VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "babelfhir-ts: $VERSION"
 
+      # Reads below resolve ./.npmrc's ${GH_PACKAGES_TOKEN}.
       - name: Decide whether to publish (build key vs last published)
         id: decide
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
+          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: |
           # Identity = FSH source content + generator version + flags (deterministic;
           # generated output bakes per-run timestamps so can't be hashed directly).
@@ -91,7 +93,7 @@ jobs:
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
           echo "build key: $KEY"
 
-          LATEST=$(npm view "$PKG_NAME" version 2>/dev/null || true)
+          LATEST=$(.github/scripts/npm-registry-version.sh "$PKG_NAME")
           if [ -z "$LATEST" ]; then
             echo "First publish of $PKG_NAME at IG version $BASE"
             echo "publish=true" >> "$GITHUB_OUTPUT"

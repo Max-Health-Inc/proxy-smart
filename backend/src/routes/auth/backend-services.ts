@@ -25,6 +25,8 @@ import { config } from '@/config'
 import { logger } from '@/lib/logger'
 import { signProxyAssertion } from '@/lib/proxy-signing'
 import { validateExternalUrl } from '@/lib/url-validation'
+import { TtlCache } from '@/lib/cache/ttl-cache'
+import { TokenCache, type FetchedToken } from '@/lib/cache/token-cache'
 
 /** A JSON Web Key with required kty and optional kid, plus any additional JWK fields */
 interface JwkKey { kty: string; kid?: string; [key: string]: unknown }
@@ -59,7 +61,8 @@ export class ClientAssertionError extends Error {
 const CACHE_TTL_MS = 60_000
 
 /** Cached admin-service access token for Keycloak admin API calls */
-let adminTokenCache: { token: string; expiresAt: number } | null = null
+const adminTokens = new TokenCache()
+const ADMIN_TOKEN_KEY = 'admin-service'
 
 // ─── jti replay protection ──────────────────────────────────────────────────
 // Map of `${iss}:${jti}` → expiration timestamp (seconds since epoch).
@@ -78,13 +81,12 @@ function purgeExpiredJtis(): void {
 /** Clear jti cache (exposed for testing). */
 export function clearJtiCache(): void {
   usedJtis.clear()
-  jwksCache.clear()
-  adminTokenCache = null
+  clientMetadata.clear()
+  adminTokens.clear()
 }
 
 // ─── Client config cache (metadata) ────────────────────────────────────────
-interface CacheEntry<T> { value: T; expiresAt: number }
-const jwksCache = new Map<string, CacheEntry<ClientMetadata>>()
+const clientMetadata = new TtlCache<ClientMetadata>({ ttlMs: CACHE_TTL_MS })
 
 /**
  * Check whether a token request contains a private_key_jwt client assertion.
@@ -208,11 +210,10 @@ export async function translateClientAssertion(
 
 /** Get an admin-service access token (cached). */
 async function getAdminToken(): Promise<string> {
-  const now = Date.now()
-  if (adminTokenCache && adminTokenCache.expiresAt > now + 10_000) {
-    return adminTokenCache.token
-  }
+  return adminTokens.get(ADMIN_TOKEN_KEY, fetchAdminToken)
+}
 
+async function fetchAdminToken(): Promise<FetchedToken> {
   const kcUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
   const resp = await fetch(kcUrl, {
     method: 'POST',
@@ -228,12 +229,8 @@ async function getAdminToken(): Promise<string> {
     throw new Error(`Admin token request failed: ${resp.status}`)
   }
 
-  const data = await resp.json()
-  adminTokenCache = {
-    token: data.access_token,
-    expiresAt: now + (data.expires_in - 30) * 1000 // refresh 30s before expiry
-  }
-  return data.access_token
+  const data: { access_token: string; expires_in?: number } = await resp.json()
+  return { token: data.access_token, expiresInSeconds: data.expires_in }
 }
 
 /**
@@ -242,11 +239,10 @@ async function getAdminToken(): Promise<string> {
  * Uses: GET /admin/realms/{realm}/clients?clientId=X
  */
 async function getClientMetadata(clientId: string): Promise<ClientMetadata> {
-  const cached = jwksCache.get(clientId)
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.value
-  }
+  return clientMetadata.getOrLoad(clientId, () => readClientMetadata(clientId))
+}
 
+async function readClientMetadata(clientId: string): Promise<ClientMetadata> {
   const adminToken = await getAdminToken()
   const searchUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients?clientId=${encodeURIComponent(clientId)}`
 
@@ -290,13 +286,10 @@ async function getClientMetadata(clientId: string): Promise<ClientMetadata> {
     throw new Error(`Client '${clientId}' has no registered JWKS`)
   }
 
-  const result: ClientMetadata = {
+  return {
     jwks,
     internalId: client.id,
   }
-
-  jwksCache.set(clientId, { value: result, expiresAt: Date.now() + CACHE_TTL_MS })
-  return result
 }
 
 /**

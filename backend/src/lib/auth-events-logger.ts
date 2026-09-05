@@ -9,6 +9,8 @@
  */
 
 import { BaseEventsLogger, mapBaseKeycloakEvent, type KeycloakEvent } from './base-events-logger'
+import { tallyBy, topEntries } from './events/aggregate'
+import { logger } from './logger'
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -63,7 +65,7 @@ class AuthEventsLogger extends BaseEventsLogger<AuthEvent, AuthAnalytics> {
       logSubdir: 'auth-events',
       logFilename: 'auth-events.jsonl',
       eventTypes: AUTH_EVENT_TYPES,
-      logChannel: 'auth',
+      channel: logger.auth,
       idPrefix: 'auth',
       mapEvent: mapAuthEvent,
     })
@@ -78,33 +80,21 @@ class AuthEventsLogger extends BaseEventsLogger<AuthEvent, AuthAnalytics> {
     clientId?: string
     userId?: string
   }): AuthEvent[] {
-    let result = super.getRecentEvents(opts)
-    if (opts?.clientId) result = result.filter(e => e.clientId === opts.clientId)
-    if (opts?.userId) result = result.filter(e => e.userId === opts.userId)
-    return result
+    return this.selectEvents(
+      opts,
+      event => !opts?.type || opts.type === 'all' || event.type === opts.type,
+      event => opts?.success === undefined || event.success === opts.success,
+      event => !opts?.clientId || event.clientId === opts.clientId,
+      event => !opts?.userId || event.userId === opts.userId,
+    )
   }
 
   protected computeAnalytics(recent: AuthEvent[]): AuthAnalytics {
-    const base = this.computeBaseAnalytics(recent)
-
-    // Top clients
-    const clientCounts = new Map<string, number>()
-    for (const e of recent) {
-      if (e.clientId) {
-        clientCounts.set(e.clientId, (clientCounts.get(e.clientId) ?? 0) + 1)
-      }
-    }
-    const topClients = Array.from(clientCounts.entries())
-      .map(([clientId, count]) => ({ clientId, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10)
-
-    const recentErrors = recent.filter(e => !e.success).slice(0, 20)
-
     return {
-      ...base,
-      recentErrors,
-      topClients,
+      ...this.computeBaseAnalytics(recent),
+      recentErrors: recent.filter(event => !event.success).slice(0, 20),
+      topClients: topEntries(tallyBy(recent, event => event.clientId))
+        .map(([clientId, count]) => ({ clientId, count })),
     }
   }
 }
